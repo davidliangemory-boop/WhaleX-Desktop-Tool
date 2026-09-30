@@ -39,7 +39,8 @@
 .workbench.observatory .compact-records .empty strong{font-size:13px;line-height:1.6;font-weight:400;color:var(--secondary);margin:0}
 .workbench .primary,.workbench.observatory .compact-records .empty .primary,.workbench .sticky-paper .paper-save{background:var(--accent);color:#fff;border:0;box-shadow:none;border-radius:8px}
 .workbench .empty .primary{font-size:12px;padding:10px 16px;white-space:nowrap}
-.workbench.observatory .record-list .note-card{padding:10px 0;border-color:var(--edge);min-height:64px}
+.workbench.observatory .record-list .note-card{padding:10px 0;border-color:var(--edge);min-height:64px;transition:none}
+.workbench.observatory .record-list .note-card::before{display:none}
 .workbench .record-main h3{font-size:13px;color:var(--ink)}
 .workbench .record-main>p,.workbench .record-meta,.workbench .record-meta .note-tags span{color:var(--secondary)}
 .workbench .record-type,.workbench .record-type.type-Idea,.workbench .record-type.type-Workflow,.workbench .record-type.type-Todo{color:#c7d1df;border-color:var(--edge);background:var(--surface)}

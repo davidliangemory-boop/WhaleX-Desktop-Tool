@@ -93,7 +93,7 @@
       const request = pip && !pip.closed ? Promise.resolve(pip) : window.documentPictureInPicture.requestWindow({ width: 420, height: 600 });
       pip = await request; floatingComposer?.dispose();
       pip.document.head.innerHTML = '';
-      for (const path of ['./styles.css','./workspace.css','./refinement.css?v=20260930-glass','./frame.css?v=20260930-frame']) { const link = pip.document.createElement('link'); link.rel = 'stylesheet'; link.href = new URL(path, location.href).href; pip.document.head.appendChild(link); }
+      for (const path of ['./styles.css','./workspace.css','./refinement.css?v=20260930-glass','./frame.css?v=20260930-frame-final']) { const link = pip.document.createElement('link'); link.rel = 'stylesheet'; link.href = new URL(path, location.href).href; pip.document.head.appendChild(link); }
       pip.document.title = 'WhaleX · 悬浮输入'; pip.document.body.className = 'capture-page workbench'; pip.document.body.innerHTML = '<div id="captureRoot"></div>';
       const thisPip = pip;
       floatingComposer = await window.WhaleXComposer.mount(pip.document.querySelector('#captureRoot'), { record, draftSlot: 'floating', onClose: () => thisPip.close() });
