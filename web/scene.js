@@ -22,7 +22,7 @@
   control.innerHTML = '<span aria-hidden="true">✧</span><select aria-label="背景动效"><option value="cinematic">沉浸动效</option><option value="gentle">轻柔动效</option><option value="still">静止背景</option></select>';
   document.querySelector('.top-actions')?.prepend(control);
   const select = control.querySelector('select');
-  let width=1,height=1,hw=1,hh=1,dpr=1,raf=0,last=0,elapsed=0,frames=0;
+  let width=1,height=1,hw=1,hh=1,dpr=1,whaleDpr=1,raf=0,last=0,elapsed=0,frames=0;
   let disposed=false,pageAway=false,heroVisible=true,focused=false,slow=false,averageCost=0,resizeTimer,sprite=null;
   let pointer={x:0,y:0},target={x:0,y:0},activeCard=null;
   const listeners=[],interactionAnimations=new Set();
@@ -68,7 +68,15 @@
     const rect=hero.getBoundingClientRect();hw=Math.max(1,rect.width);hh=Math.max(1,rect.height);
     dpr=Math.min(devicePixelRatio||1,slow||coarse.matches?1:1.5,Math.sqrt(2300000/(width*height)));
     sky.width=Math.round(width*dpr);sky.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
-    sea.width=Math.round(hw*dpr);sea.height=Math.round(hh*dpr);whaleCtx.setTransform(dpr,0,0,dpr,0,0);draw();
+    // Keep the expensive full-screen sky at its original pixel budget.
+    // Only the hero rendering gains Retina resolution; all coordinates and motion stay unchanged.
+    whaleDpr=Math.min(devicePixelRatio||1,slow?1.5:3,Math.sqrt(1800000/(hw*hh)));
+    sea.width=Math.round(hw*whaleDpr);sea.height=Math.round(hh*whaleDpr);
+    whaleCtx.setTransform(whaleDpr,0,0,whaleDpr,0,0);whaleCtx.imageSmoothingQuality='high';
+    // Preserve the original 784x370 coordinate system without squeezing the source to 700 pixels.
+    const detailScale=Math.min(2,whaleDpr);
+    deform.width=Math.round(784*detailScale);deform.height=Math.round(370*detailScale);
+    dc.setTransform(detailScale,0,0,detailScale,0,0);dc.imageSmoothingQuality='high';draw();
   }
   function drawGalaxy(c,x,y,radius,tilt,phase,opacity){
     c.save();c.translate(x,y);c.rotate(tilt);c.scale(1,.5);c.rotate(phase);c.globalAlpha=opacity;c.globalCompositeOperation='lighter';
@@ -173,6 +181,6 @@
     image.onload=image.onerror=null;sprite=null;layer.remove();sea.remove();control.remove();document.body.classList.remove('observatory');
   }
   on(window,'pagehide',e=>{if(e.persisted){pageAway=true;refresh();}else dispose();});on(window,'pageshow',()=>{pageAway=false;refresh();});
-  window.WhaleXScene={setMode,dispose,inspect:()=>({mode,effective:effective(),running:allowed(),frames,elapsed,spriteReady:!!sprite,averageDrawMs:Math.round(averageCost*100)/100,lowPower:slow||coarse.matches,dpr,reduced:reduced.matches})};
+  window.WhaleXScene={setMode,dispose,inspect:()=>({mode,effective:effective(),running:allowed(),frames,elapsed,spriteReady:!!sprite,averageDrawMs:Math.round(averageCost*100)/100,lowPower:slow||coarse.matches,dpr,whaleDpr,reduced:reduced.matches})};
   size();refresh();
 })();

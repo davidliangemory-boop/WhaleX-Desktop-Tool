@@ -1,4 +1,4 @@
-"""Guard the user's existing scene geometry; optional reference compares actual scene pixels."""
+"""Guard approved scene geometry, background pixels and the Retina whale renderer."""
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -53,10 +53,45 @@ try:
             if refurl:
                 refpage=context.new_page()
                 old=scene(refpage,refurl,w,h)
-                assert actual==old, f'Existing scene pixels or position changed at {key}'
+                # Whale antialiasing is the approved exception; backdrop and positions are not.
+                for field in ['hero','canvas','sky','backdrop']:
+                    assert actual[field]==old[field], f'Existing {field} changed at {key}'
                 refpage.close()
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'), f'Horizontal overflow at {key}'
-            print('PASS: unchanged scene files, geometry'+(' and rendered pixels' if refurl else '')+' at '+key,flush=True)
+            print('PASS: approved scene files, unchanged geometry'+(' and background pixels' if refurl else '')+' at '+key,flush=True)
+        for scale in [1,2,3]:
+            retina=browser.new_context(viewport={'width':390,'height':844},device_scale_factor=scale,is_mobile=True,has_touch=True)
+            retina.add_init_script("localStorage.setItem('whalex_scene_mode_v1','still')")
+            mobile=retina.new_page()
+            current=scene(mobile,url,390,844)
+            metrics=mobile.evaluate('''() => {
+              const whale=document.querySelector('.whale-canvas'),sky=document.querySelector('.cosmic-canvas');
+              return {scene:WhaleXScene.inspect(),whale:[whale.width,whale.height],sky:[sky.width,sky.height]};
+            }''')
+            assert metrics['scene']['whaleDpr']==scale, metrics
+            assert metrics['whale']==[362*scale,310*scale], metrics
+            assert metrics['sky']==[390,844], metrics
+            assert current['hero']==manifest['geometry']['390x844']['hero']
+            if refurl:
+                oldpage=retina.new_page();old=scene(oldpage,refurl,390,844)
+                for field in ['hero','canvas','sky','backdrop']:
+                    assert current[field]==old[field], f'Mobile {field} changed at DPR {scale}'
+                oldpage.close()
+            errors=[];mobile.on('pageerror',lambda error:errors.append(str(error)))
+            still=mobile.evaluate("document.querySelector('.whale-canvas').toDataURL()")
+            mobile.wait_for_timeout(120)
+            assert mobile.evaluate("document.querySelector('.whale-canvas').toDataURL()") == still
+            mobile.evaluate("WhaleXScene.setMode('cinematic')")
+            mobile.wait_for_function('() => WhaleXScene.inspect().frames>=12')
+            assert mobile.evaluate('WhaleXScene.inspect().running')
+            mobile.set_viewport_size({'width':844,'height':390})
+            mobile.wait_for_timeout(200)
+            assert mobile.evaluate('document.querySelector(".whale-canvas").width*document.querySelector(".whale-canvas").height<=1803000')
+            mobile.emulate_media(reduced_motion='reduce')
+            mobile.wait_for_function("() => WhaleXScene.inspect().effective==='still' && !WhaleXScene.inspect().running")
+            assert not errors,errors
+            print(f'PASS: mobile DPR {scale}, original background resolution, motion, landscape pixel budget and reduced-motion',flush=True)
+            retina.close()
         if os.environ.get('WHALEX_RECORD_SCENE'):
             manifest['geometry']=baseline
             Path('/tmp/whalex-layout-baseline-20260930/geometry.json').write_text(json.dumps(manifest,indent=2)+'\n')
