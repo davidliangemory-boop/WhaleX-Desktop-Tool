@@ -117,7 +117,8 @@ try:
         floating=context.new_page();floating.goto(url+'capture.html');floating.wait_for_selector('.sticky-paper textarea')
         check('standalone capture uses the independent observatory capsule',floating.locator('.sticky-paper').evaluate('e=>{const c=getComputedStyle(e);return c.backgroundColor==="rgb(16, 38, 71)"&&getComputedStyle(e,"::before").height==="2px"}'))
         for surface in [page,phone]:
-            if surface.locator('#dockCollapse').is_visible():surface.locator('#dockCollapse').click()
+            surface.keyboard.press('Escape')
+            expect(surface.locator('#dockSummary')).to_have_attribute('aria-expanded','false')
             surface.locator('#workbenchTools').evaluate('e=>e.open=false')
             a=surface.locator('#recordTrigger').bounding_box();b=surface.locator('#floatTrigger').bounding_box()
             check('capture buttons do not overlap',b['x']+b['width']+8<=a['x'])
@@ -147,7 +148,7 @@ try:
         expect(page.locator('.empty button')).to_have_text('清除筛选')
         check('zero results retain scope and actionable reset',page.locator('#viewSubtitle').is_visible() and page.locator('#tagFilter').inner_text().find('不存在的搜索验收')>=0)
         page.locator('.empty button').click();expect(page.locator('#searchInput')).to_have_value('')
-        page.wait_for_function('document.querySelectorAll(".note-card").length>0');check('reset restores records')
+        page.wait_for_function('() => document.querySelectorAll(".note-card").length>0');check('reset restores records')
         page.locator('#dockCollapse').click();page.keyboard.press('Tab');page.locator('#dockSummary').focus()
         expect(page.locator('#dockCollapse')).to_be_focused();check('keyboard focus expands with visible focus')
         page.keyboard.press('Escape');expect(page.locator('#dockSummary')).to_have_attribute('aria-expanded','false')
