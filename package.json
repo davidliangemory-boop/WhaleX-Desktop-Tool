@@ -3,6 +3,6 @@
   "description":"Shared dependency-free WhaleX frontend",
   "scripts":{
     "test":"node --test tests/logic.test.cjs",
-    "check":"node --check web/logic.js && node --check web/store.js && node --check web/sync.js && node --check web/composer.js && node --check web/app.js && node --check web/capture.js"
+    "check":"node --check web/logic.js && node --check web/store.js && node --check web/sync.js && node --check web/composer.js && node --check web/app.js && node --check web/capture.js && node --check web/scene.js"
   }
 }

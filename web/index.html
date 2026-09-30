@@ -4,41 +4,50 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>WhaleX · 提示词与灵感工作台</title>
-<link rel="icon" href="./assets/whale.svg" type="image/svg+xml"><link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./scene.css">
+<link rel="icon" href="./assets/brand-mark.svg" type="image/svg+xml"><link rel="preload" href="./assets/cosmic-landscape.webp" as="image"><link rel="preload" href="./assets/whale-luminous.webp" as="image"><link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./scene.css">
 </head>
 <body>
 <div class="app-shell">
  <aside class="sidebar">
-  <a class="brand" href="./index.html" aria-label="WhaleX 首页"><img src="./assets/whale.svg" alt=""><div><strong>WhaleX</strong><small>THINK DEEPER · WRITE FURTHER</small></div></a>
+  <a class="brand" href="./index.html" aria-label="WhaleX 首页"><img src="./assets/brand-mark.svg" alt=""><div><strong>WhaleX</strong><small>Think Deeper · Write Further</small></div></a>
   <nav class="nav-section" aria-label="主导航">
    <button class="nav-item active" data-view="all"><i data-icon="home"></i><span>首页</span><em data-count="all">0</em></button>
    <button class="nav-item" data-act="capture"><i data-icon="edit"></i><span>悬浮便签</span></button>
-   <button class="nav-item" data-view="today"><i data-icon="calendar"></i><span>今天</span><em data-count="today">0</em></button>
+   <button class="nav-item" data-act="libraries"><i data-icon="library"></i><span>资料库</span></button>
+   <button class="nav-item" data-act="suggest"><i data-icon="sparkles"></i><span>智能整理</span></button>
+   <button class="nav-item" data-type="Workflow"><i data-icon="workflow"></i><span>工作流</span></button>
+   <button class="nav-item" data-act="tags"><i data-icon="tag"></i><span>标签</span></button>
    <button class="nav-item" data-view="favorites"><i data-icon="star"></i><span>收藏</span><em data-count="favorites">0</em></button>
    <button class="nav-item" data-view="archived"><i data-icon="archive"></i><span>归档</span></button>
   </nav>
-  <section class="library-section"><div class="nav-title">LIBRARIES <button class="mini-button" data-act="newlib" aria-label="新建资料库">＋</button></div><div class="nav-section" id="libraryNav"></div></section>
-  <div class="sidebar-bottom"><button class="nav-item" data-act="settings"><i data-icon="settings"></i><span>设置与同步</span></button><p>一个想法，一张便签。<br>让每次记录都有归处。</p></div>
+  <section class="library-section"><div class="nav-title">我的资料库 <button class="mini-button" data-act="newlib" aria-label="新建资料库">＋</button></div><div class="nav-section" id="libraryNav"></div></section>
+  <div class="sidebar-bottom"><button class="nav-item" data-act="settings"><i data-icon="settings"></i><span>设置与同步</span></button><div class="sidebar-poster"><p>让每一个想法<br>都有更大的可能</p><img src="./assets/whale-luminous.webp" alt="" loading="lazy"><span>WhaleX<small>YOUR AI CO-PILOT</small></span></div></div>
  </aside>
  <main class="main">
   <header class="topbar"><div class="search"><i data-icon="search"></i><input id="searchInput" aria-label="搜索记录" placeholder="搜索提示词、笔记、标签…"><kbd>Ctrl K</kbd></div><div class="top-actions"><button class="sync-chip" data-act="settings" id="syncStatus" title="打开同步设置"><span class="sync-dot"></span><span>仅本机 · 未连接云端</span></button><button class="round-button" data-act="settings" aria-label="账号与设置">W</button></div></header>
   <div class="notice" id="migrationNotice" role="alert" hidden></div>
   <div class="workspace">
    <div class="center-column">
-    <section class="hero"><img class="hero-art" src="./assets/hero-whale.webp" alt="深海星光中的 WhaleX 蓝鲸"><div class="hero-copy"><div class="eyebrow">A HOME FOR YOUR IDEAS</div><h1>把好想法，<br><span>留在手边。</span></h1><p>捕捉提示词，整理灵感。<br>从一张便签开始，让每次思考都能再次被调用。</p></div><div class="hero-wordmark">WhaleX<small>CAPTURE · ORGANIZE · CREATE</small></div></section>
+    <section class="hero" aria-label="WhaleX 灵感星海"><img class="hero-art" src="./assets/whale-luminous.webp" alt="在星海中游动的发光蓝鲸"><div class="hero-copy"><h1>WhaleX</h1><p class="hero-kicker">YOUR AI CO-PILOT</p><p class="hero-tagline">捕捉 <span>·</span> 整理 <span>·</span> 连接 <span>·</span> 创造</p><p class="hero-description">让灵感不再稍纵即逝，把想法变成更大的创造力。</p></div></section>
     <section class="feature-grid" aria-label="快捷操作">
      <button class="feature" data-act="capture"><span class="tile-icon"><i data-icon="edit"></i></span><div><strong>悬浮便签</strong><small>随时输入，不打断思路</small></div><span>↗</span></button>
-     <button class="feature" data-view="all"><span class="tile-icon"><i data-icon="library"></i></span><div><strong>资料库</strong><small>为每个提示词找到归处</small></div><span>↗</span></button>
+     <button class="feature" data-act="libraries"><span class="tile-icon"><i data-icon="library"></i></span><div><strong>资料库</strong><small>统一管理你的知识</small></div><span>→</span></button>
      <button class="feature" data-act="tags"><span class="tile-icon"><i data-icon="tag"></i></span><div><strong>标签</strong><small>跨资料库连接想法</small></div><span>↗</span></button>
-     <button class="feature" data-type="Workflow"><span class="tile-icon"><i data-icon="workflow"></i></span><div><strong>工作流</strong><small>留下可复用的方法</small></div><span>↗</span></button>
-     <button class="feature" data-act="settings"><span class="tile-icon"><i data-icon="cloud"></i></span><div><strong>自动同步</strong><small>登录后连接你的设备</small></div><span>↗</span></button>
+     <button class="feature" data-act="suggest"><span class="tile-icon"><i data-icon="sparkles"></i></span><div><strong>智能整理</strong><small>为灵感找到合适的归处</small></div><span>→</span></button>
+     <button class="feature" data-type="Workflow"><span class="tile-icon"><i data-icon="workflow"></i></span><div><strong>工作流</strong><small>串联你的创造</small></div><span>→</span></button>
      <button class="feature" data-act="export"><span class="tile-icon"><i data-icon="export"></i></span><div><strong>导出</strong><small>备份与分享，自由带走</small></div><span>↗</span></button>
     </section>
+    <section class="collection-section" aria-label="精选空间"><header class="section-title"><div><h2>精选空间 <span>每个想法，都有归处</span></h2></div><button class="text-button" data-act="browse">查看记录 →</button></header><div class="collection-grid">
+     <button class="collection-card collection-prompt" data-view="all" data-collection-type="Prompt"><span class="collection-art" aria-hidden="true"></span><span class="collection-heading"><i data-icon="message"></i><span><strong>Prompt 精选</strong><small><b data-collection-count="Prompt">0</b> 条 · 持续积累</small></span></span><span class="collection-quote">好的提示词，<br>能打开一个新的世界。</span></button>
+     <button class="collection-card collection-idea" data-view="all" data-collection-type="Idea"><span class="collection-art" aria-hidden="true"></span><span class="collection-heading"><i data-icon="note"></i><span><strong>灵感笔记</strong><small><b data-collection-count="Idea">0</b> 条 · 记录每个想法</small></span></span><span class="collection-quote">所有伟大的创造，<br>都始于一个小小的想法。</span></button>
+     <button class="collection-card collection-workflow" data-view="all" data-collection-type="Workflow"><span class="collection-art" aria-hidden="true"></span><span class="collection-heading"><i data-icon="workflow"></i><span><strong>工作流</strong><small><b data-collection-count="Workflow">0</b> 条 · 提升效率</small></span></span><span class="collection-quote">把好的方法，<br>变成可复用的工作流。</span></button>
+     <button class="collection-card collection-favorite" data-view="favorites" data-collection-type="all"><span class="collection-art" aria-hidden="true"></span><span class="collection-heading"><i data-icon="star"></i><span><strong>收藏</strong><small><b data-collection-count="favorites">0</b> 条 · 值得反复看</small></span></span><span class="collection-quote">重要的灵感，<br>值得被好好保存。</span></button>
+    </div></section>
     <section class="notes-section"><header class="section-title"><div><h2 id="viewTitle">最近记录</h2><p id="viewSubtitle">你的提示词、想法与工作流</p></div><div class="toolbar"><button class="active" data-type="all">全部</button><button data-type="Prompt">Prompt</button><button data-type="Idea">想法</button></div></header><div class="tag-filter" id="tagFilter" aria-label="标签筛选"></div><div class="note-grid" id="noteGrid"></div></section>
    </div>
-   <aside class="right-column"><div id="inlineComposer"></div><section class="today-panel glass"><header class="today-header"><div><h3>今天的小进展</h3><p id="todayDate"></p></div><strong id="todayCount">0</strong></header><div id="todayTasks"></div></section><section class="quote-card"><p>Keep good<br>ideas alive.</p><small>更好的想法，从记录开始。 — WhaleX</small></section></aside>
+   <aside class="right-column"><div class="handwritten-note" aria-hidden="true">更好的想法，<br>从记录开始。<small>Think Deeper · Write Further</small></div><div id="inlineComposer"></div><section class="today-panel glass"><header class="today-header"><div class="today-heading"><i data-icon="calendar"></i><div><h3>今日任务</h3><p id="todayDate"></p></div></div><strong id="todayCount">0</strong></header><div class="task-progress" id="taskProgress" role="progressbar" aria-label="任务完成进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div><div id="todayTasks"></div><button class="add-task" data-act="newtask">＋ 新增任务</button></section><section class="quote-card"><p>Good ideas<br>always find a home.</p><small>一个想法，一张便签。</small></section></aside>
   </div>
-  <footer class="bottom-note">WhaleX · Observatory 动态主题 · 本机优先<br>未连接云端时不会跨设备同步；网页浮窗依赖浏览器画中画。</footer>
+  <footer class="bottom-note"><span class="scene-status"><i aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i>灵感星海 · 自由记录</span><span>更大的想法，值得被好好保存。 <em>— WhaleX</em></span><button class="text-button" data-act="settings">同步设置 →</button></footer>
  </main>
 </div>
 <dialog id="editorDialog" class="modal editor-dialog" aria-label="编辑提示词"><div id="editorRoot"></div></dialog>

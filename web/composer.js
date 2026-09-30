@@ -13,7 +13,7 @@
     if (draft && current && expected) current = { ...current, changeId: expected };
     chosenTags = L.tags(initial.tags);
     host.innerHTML = `<section class="sticky-paper">
-      <header class="paper-head" data-tauri-drag-region><span class="paper-brand" data-tauri-drag-region>✦ ${record ? '编辑提示词' : '随手记一个 Prompt'}</span>
+      <header class="paper-head" data-tauri-drag-region><span class="paper-brand" data-tauri-drag-region>✦ ${record ? '编辑提示词' : '记录你的想法'}</span>
         <div class="paper-controls"><button type="button" data-action="pin" title="切换窗口置顶" aria-label="切换窗口置顶">⌃</button><button type="button" data-action="close" title="收起便签，保留草稿" aria-label="收起便签">×</button></div></header>
       <form class="capture-form">
         <input class="paper-title" name="title" maxlength="160" placeholder="给这个想法起个名字（可留空）" aria-label="标题">
@@ -26,7 +26,7 @@
         <div class="tag-editor"><div data-tags></div><input name="tag" maxlength="200" placeholder="＋ 添加标签" aria-label="添加标签"></div>
         <div class="paper-message" role="status" aria-live="polite">${draft ? '已恢复上次未保存的草稿' : '好想法，值得被好好保存。'}</div>
         <footer class="paper-actions"><button type="button" class="paper-suggest" data-action="suggest">✧ 归档建议</button><button type="submit" class="paper-save">${record ? '保存修改' : '保存到资料库'} <span>↗</span></button></footer>
-        <div class="paper-shortcut">Ctrl / ⌘ + Enter 保存 · 归档建议使用本地规则，无模型调用</div>
+        <div class="paper-shortcut">Ctrl / ⌘ + Enter 保存</div>
       </form></section>`;
     const form = host.querySelector('form'), field = name => form.elements.namedItem(name);
     const message = text => { host.querySelector('.paper-message').textContent = text; };
@@ -98,7 +98,7 @@
     });
     renderTags(); host.querySelector('[data-count]').textContent = field('content').value.length + ' 字';
     const changed = () => void refreshLibraries(); window.addEventListener('whalex-change', changed);
-    return { focus: () => field('content').focus(), dispose: () => { disposed = true; host.removeEventListener('click', clickHandler); window.removeEventListener('whalex-change', changed); }, persist };
+    return { focus: () => field('content').focus(), setType: type => { if (L.TYPES.includes(type)) { field('type').value = type; persist(); field('content').focus(); } }, suggest: () => host.querySelector('[data-action="suggest"]').click(), dispose: () => { disposed = true; host.removeEventListener('click', clickHandler); window.removeEventListener('whalex-change', changed); }, persist };
   }
   window.WhaleXComposer = { mount };
 })();
