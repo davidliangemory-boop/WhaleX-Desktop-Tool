@@ -1,58 +1,17 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "WhaleX",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "com.whalex.desktop",
-  "build": {
-    "frontendDist": "../dist"
-  },
+  "build": {"frontendDist": "../../web"},
   "app": {
     "withGlobalTauri": true,
     "windows": [
-      {
-        "label": "main",
-        "title": "WhaleX",
-        "url": "index.html",
-        "width": 1500,
-        "height": 920,
-        "minWidth": 1120,
-        "minHeight": 720,
-        "center": true,
-        "resizable": true
-      },
-      {
-        "label": "capture",
-        "title": "WhaleX Capture",
-        "url": "capture.html",
-        "width": 700,
-        "height": 445,
-        "center": true,
-        "visible": false,
-        "alwaysOnTop": true,
-        "decorations": false,
-        "resizable": false,
-        "skipTaskbar": true
-      }
+      {"label":"main","title":"WhaleX","url":"index.html","width":1500,"height":960,"minWidth":880,"minHeight":640,"center":true,"resizable":true},
+      {"label":"capture","title":"WhaleX Capture","url":"capture.html","width":440,"height":650,"minWidth":370,"minHeight":560,"center":true,"visible":false,"alwaysOnTop":true,"decorations":false,"resizable":true,"skipTaskbar":false}
     ],
-    "security": {
-      "csp": null
-    }
+    "security": {"csp":"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost https://*.supabase.co; object-src 'none'; base-uri 'self'"}
   },
-  "bundle": {
-    "active": true,
-    "targets": "all",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.ico"
-    ]
-  },
-  "plugins": {
-    "sql": {
-      "preload": [
-        "sqlite:whalex.db"
-      ]
-    }
-  }
+  "bundle": {"active":true,"targets":["nsis","msi"],"icon":["icons/32x32.png","icons/128x128.png","icons/128x128@2x.png","icons/icon.ico"]},
+  "plugins": {"sql":{"preload":["sqlite:whalex.db"]}}
 }
