@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost https://*.supabase.co https:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>WhaleX · 提示词与灵感工作台</title>
 <link rel="icon" href="./assets/brand-mark.svg" type="image/svg+xml"><link rel="preload" href="./assets/cosmic-landscape.webp" as="image"><link rel="preload" href="./assets/whale-luminous.webp" as="image"><link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./scene.css"><link rel="stylesheet" href="./workspace.css"><link rel="stylesheet" href="./refinement.css?v=20260930-glass">
-<link rel="stylesheet" href="./frame.css?v=20260930-frame-v2">
+<link rel="stylesheet" href="./frame.css?v=20260930-observatory-v3">
 </head>
 <body class="workbench">
 <div class="app-shell">
@@ -45,7 +45,8 @@
   <footer class="bottom-note"><span class="scene-status"><i aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i>灵感星海 · 自由记录</span><button class="text-button" data-act="settings">同步设置 →</button></footer>
  </main>
 </div>
-<button id="recordTrigger" class="record-trigger" data-act="focus" aria-controls="inlineComposer" aria-expanded="false">记录</button>
+<button id="recordTrigger" class="record-trigger" data-act="focus" aria-controls="inlineComposer" aria-expanded="false"><span class="record-trigger-beacon" aria-hidden="true"></span>记录</button>
+<button id="floatTrigger" class="float-trigger" data-act="floatcapture" aria-label="打开悬浮便签" title="打开悬浮便签（网页画中画 / Windows 置顶）"><span aria-hidden="true">⌁</span></button>
 <dialog id="editorDialog" class="modal editor-dialog" aria-label="编辑提示词"><div id="editorRoot"></div></dialog>
 <dialog id="settingsDialog" class="modal" aria-labelledby="settingsTitle">
  <header><div><h2 id="settingsTitle">设置与同步</h2><p>桌面与网页使用同一账号，自动同步资料库、记录和标签。</p></div><button data-close="settingsDialog" aria-label="关闭设置">×</button></header>
@@ -62,5 +63,5 @@
 <dialog id="exportDialog" class="modal" aria-labelledby="exportTitle"><header><h2 id="exportTitle">导出当前视图</h2><button data-close="exportDialog" aria-label="关闭">×</button></header><p>只导出当前筛选下的记录。完整备份请在设置中操作。</p><div class="buttons"><button class="ghost" data-export="md">Markdown</button><button class="ghost" data-export="txt">TXT</button><button class="ghost" data-export="json">JSON</button><button class="ghost" data-export="html">Word 兼容 HTML</button></div><p class="code-note">HTML 可用 Word 打开；此格式不是原生 .docx。</p></dialog>
 <dialog id="workspaceDialog" class="modal workspace-modal" aria-labelledby="workspaceTitle"><div id="workspaceRoot"></div></dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="./scene.js?v=20260930-retina"></script><script src="./logic.js"></script><script src="./store.js"></script><script src="./sync.js"></script><script src="./composer.js?v=20260930-glass"></script><script src="./workspace.js?v=20260930-glass"></script><script src="./frame.js?v=20260930-frame"></script><script src="./app.js?v=20260930-frame-v2"></script>
+<script src="./scene.js?v=20260930-retina"></script><script src="./logic.js"></script><script src="./store.js"></script><script src="./sync.js"></script><script src="./composer.js?v=20260930-glass"></script><script src="./workspace.js?v=20260930-glass"></script><script src="./frame.js?v=20260930-frame"></script><script src="./app.js?v=20260930-observatory-v3"></script>
 </body></html>

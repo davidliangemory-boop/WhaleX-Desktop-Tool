@@ -128,3 +128,47 @@
   @keyframes frame-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 }
 @media(prefers-reduced-motion:reduce){.workbench #inlineComposer,.workbench button,.workbench summary{transition:none}.workbench-tools[open]>.utility-body{animation:none}}
+
+/* Observatory UI v3: UI panels act as instruments around the scene, never as a second hero. */
+.workbench.observatory .sidebar{background-color:#080f1e;background-image:linear-gradient(180deg,#091326 0%,#070f1f 100%)}
+.workbench.observatory .brand{position:relative}
+.workbench.observatory .brand::after{content:"";position:absolute;right:10px;bottom:0;left:10px;height:1px;background:linear-gradient(90deg,transparent,#4064958c,transparent)}
+.workbench.observatory .nav-item{border-radius:10px;letter-spacing:.05px}
+.workbench.observatory .nav-item.active{background:linear-gradient(90deg,#2a62bb,#2350a2);box-shadow:inset 2px 0 #9ceeff,inset 0 1px #d6edff1c}
+.workbench.observatory .topbar{position:relative}
+.workbench.observatory .topbar::after{content:"";position:absolute;right:0;bottom:-9px;left:0;height:1px;background:linear-gradient(90deg,#6ecfff00,#77bfff45 18%,#7a9fff24 70%,transparent)}
+.workbench.observatory .search{position:relative;overflow:hidden;background:linear-gradient(100deg,#0d1c35,#0b162a);border-color:#3d5c84}
+.workbench.observatory .motion-control,.workbench.observatory .sync-chip{background:linear-gradient(135deg,#0e1c33,#0a1425);border-color:#344b69}
+.workbench.observatory .compact-records{position:fixed;isolation:isolate}
+.workbench.observatory .compact-records::before{content:"";position:absolute;z-index:-1;top:-1px;right:0;left:0;height:1px;background:linear-gradient(90deg,transparent 2%,#80dfff60 21%,#5d8eff42 60%,transparent 94%)}
+.workbench .home-tab.active{position:relative}
+.workbench .home-tab.active::after{content:"";position:absolute;right:0;bottom:1px;left:0;height:2px;border-radius:2px;background:linear-gradient(90deg,#58d8ff,#708eff);box-shadow:0 0 9px #60caff6e}
+.workbench .toolbar button{background:#0f1d31;border-color:#2d405a}
+.workbench .toolbar button.active{background:#1c3656;border-color:#658bb8;box-shadow:inset 0 1px #cfeaff12}
+.workbench.observatory .compact-records .empty{position:relative;gap:16px}
+.workbench.observatory .compact-records .empty::before{content:"✦";color:#72d9ff;font-size:13px;text-shadow:0 0 12px #55c6ff}
+.record-trigger{display:flex;align-items:center;justify-content:center;gap:9px;border-color:#4d729e;background:linear-gradient(135deg,#112642,#0d1b2f);box-shadow:inset 0 1px #c5e6ff18,0 9px 22px #0208175e;transition:transform 180ms ease,background 180ms ease,box-shadow 180ms ease}
+.record-trigger:hover{background:linear-gradient(135deg,#19395e,#112944);box-shadow:inset 0 1px #d7f1ff30,0 10px 24px #0208178a,0 0 16px #238dff1f;transform:translateY(-1px)}
+.record-trigger-beacon{position:relative;width:7px;height:7px;border-radius:50%;background:#75e4ff;box-shadow:0 0 10px #70dfff}
+.float-trigger{position:fixed;right:130px;bottom:calc(max(var(--dock-height),180px) + 18px);width:42px;height:42px;z-index:13;border:1px solid #3a5d87;border-radius:50%;background:#0b1930;color:#8cddff;box-shadow:inset 0 1px #d0efff12,0 8px 20px #02081750;transition:transform 180ms ease,background 180ms ease,color 180ms ease}
+.float-trigger span{font-size:22px;line-height:1}
+.float-trigger:hover{color:#e4f9ff;background:#17365c;transform:translateY(-1px);box-shadow:inset 0 1px #e4f5ff2e,0 8px 22px #0208177a,0 0 15px #47c9ff22}
+.workbench #inlineComposer{overflow:auto;border-color:#3b638f;background:linear-gradient(150deg,#0e213b,#0b172b 62%,#091426);box-shadow:inset 0 1px #d5eeff12,inset 0 -1px #02081792,0 20px 46px #01061191}
+.workbench #inlineComposer::before{content:"";position:absolute;z-index:2;top:0;right:22px;left:22px;height:2px;background:linear-gradient(90deg,transparent,#69d8ff,#818cff,transparent);box-shadow:0 0 12px #5bc4ff85;pointer-events:none}
+.workbench #inlineComposer .sticky-paper{display:flex;flex-direction:column;min-height:100%;border:0;border-radius:0;background-color:var(--surface);background-image:linear-gradient(150deg,#10243b 0%,#0d1627 52%,#0b1424 100%)}
+.workbench #inlineComposer .capture-form{display:flex;flex:1;flex-direction:column;min-height:0;padding:0 18px 16px}
+.workbench #inlineComposer .paper-head{min-height:58px;padding:17px 18px 13px;background:linear-gradient(90deg,#16375f87,transparent);border-bottom:1px solid #5277a033}
+.workbench #inlineComposer .paper-brand{font-size:14px;letter-spacing:.2px}
+.workbench #inlineComposer .paper-brand::before{content:"";display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:#71e4ff;box-shadow:0 0 10px #71e4ff;vertical-align:1px}
+.workbench #inlineComposer .paper-content{flex:1;min-height:150px;max-height:none;resize:none;margin-top:12px;border-color:#4d719a;background:#071329bd;line-height:1.78}
+.workbench #inlineComposer .paper-content:focus{outline:1px solid #70d6ffbf;box-shadow:0 0 0 3px #3c9cff1c}
+.workbench #inlineComposer .capture-details{margin-top:0;background:#0f27437a;border-color:#496f9859}
+.workbench #inlineComposer .paper-message{min-height:18px;padding:0 0 8px}
+.workbench #inlineComposer .paper-actions{margin-top:auto}
+.workbench #inlineComposer .paper-save{background:linear-gradient(105deg,#155da8,#2469ce 62%,#506ee2)}
+@media(max-width:760px){.float-trigger{right:116px;bottom:calc(max(var(--dock-height),180px) + 12px);width:40px;height:40px}.record-trigger{right:14px}}
+@media(prefers-reduced-motion:reduce){.record-trigger,.float-trigger{transition:none}}
+
+.workbench #inlineComposer .paper-head,.workbench #inlineComposer .capture-details,.workbench #inlineComposer .paper-actions{flex-shrink:0}
+.workbench.observatory .search:focus-within{border-color:#6e98cc;transition:border-color 160ms ease}
+.workbench:has(#inlineComposer.is-open)>.float-trigger,.workbench:has(#workbenchTools[open])>.float-trigger{visibility:hidden}
