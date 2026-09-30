@@ -1,0 +1,76 @@
+/* UI-only refinement. Do not target scene canvases, scene layers, hero geometry or animation code. */
+:root{--panel-radius:17px;--panel-padding:18px;--panel-border:1px solid #609ceb8c;--panel-fill:rgba(13,25,48,.75);--panel-text:#c9d6f2}
+[hidden]{display:none!important}
+.observatory .hero-copy{transform:scale(.75);transform-origin:center bottom;opacity:.68}
+.observatory .search{box-shadow:0 0 12px rgba(80,140,255,.35),inset 0 1px #d6e4ff17}
+.observatory .motion-control,.observatory .sync-chip,.observatory .round-button{border-radius:11px}
+.observatory .sidebar .nav-item,.observatory #libraryNav .nav-item{gap:12px}
+.sidebar .nav-item em{margin-left:auto;min-width:22px;flex-shrink:0;text-align:center;font-variant-numeric:tabular-nums;line-height:20px;border-radius:6px;background:#19365b80}
+.sidebar .library-dot{margin-inline:7px}
+.observatory .right-column{padding-top:0;gap:16px;align-content:start}
+.observatory #inlineComposer .sticky-paper{animation:none;transform:none;transform-origin:center}
+.sticky-paper,.observatory .sticky-paper,.capture-page .sticky-paper,.editor-dialog .sticky-paper{
+  color-scheme:dark;color:var(--panel-text);background:var(--panel-fill);border:var(--panel-border);border-radius:var(--panel-radius);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);overflow:hidden;
+  box-shadow:inset 0 1px #afdaff1a,0 0 24px #235eff18,0 14px 35px #02061244;
+}
+.sticky-paper::before,.observatory .sticky-paper::before,.capture-page .sticky-paper::before{content:"";position:absolute;top:0;left:0;right:0;width:auto;height:3px;border:0;border-radius:0;transform:none;background:linear-gradient(90deg,#23b8e8,#82edff 48%,#4e8fff);box-shadow:none;backdrop-filter:none;pointer-events:none}
+.sticky-paper:focus-within,.observatory .sticky-paper:focus-within{box-shadow:inset 0 1px #afdaff1a,0 0 0 2px #50adff26,0 14px 35px #02061244}
+.sticky-paper .paper-head{padding:18px 18px 14px;gap:12px}
+.sticky-paper .paper-brand{font-family:inherit;font-size:15px;font-weight:600;letter-spacing:0;color:#e4eeff}
+.sticky-paper .paper-controls{flex:none;gap:6px}
+.sticky-paper .paper-controls button{color:var(--panel-text);background:#26467066;border:1px solid #6585b744;border-radius:7px;font-size:18px;width:26px;height:26px}
+.sticky-paper .capture-form{padding:0 var(--panel-padding) var(--panel-padding)}
+.sticky-paper input,.sticky-paper textarea,.sticky-paper select,.sticky-paper .paper-selects select,.sticky-paper .tag-editor input{color:var(--panel-text);border:1px solid #587ba94d;background:rgba(3,12,28,.42);box-shadow:none}
+.sticky-paper input::placeholder,.sticky-paper textarea::placeholder{color:#c9d6f2;opacity:.68}
+.sticky-paper option{background:#0d1930;color:var(--panel-text)}
+.sticky-paper .paper-content{min-height:132px;padding:12px;font-size:13px;line-height:1.75;border-radius:11px;color:var(--panel-text);background:rgba(3,12,28,.42);border:1px solid #587ba94d}
+.sticky-paper .paper-title{border-radius:8px;color:var(--panel-text);background:rgba(3,12,28,.42);border:1px solid #587ba94d}
+.sticky-paper .paper-under{color:var(--panel-text);font-size:10px;padding:8px 1px 10px;opacity:.75;min-height:31px}
+.sticky-paper .capture-details{border:1px solid #587ba94d;border-radius:10px;background:#10243c66;color:var(--panel-text);margin:0 0 12px}
+.sticky-paper .capture-details>summary{padding:10px 0;color:var(--panel-text)}
+.sticky-paper .capture-details summary small,.sticky-paper .capture-details>summary::after,.sticky-paper .paper-label small{color:var(--panel-text);opacity:.7}
+.sticky-paper .field-head,.sticky-paper .paper-label,.sticky-paper .paper-link,.editor-dialog .sticky-paper label{color:var(--panel-text)}
+.sticky-paper .tag-chip{background:#20426380;color:#dbecff;border:1px solid #578fbd66}
+.sticky-paper .tag-chip span{color:#c9d6f2}
+.sticky-paper .inline-library button{background:#224776;color:var(--panel-text);border:1px solid #5a91c266}
+.sticky-paper .paper-message{color:var(--panel-text);min-height:0;padding:0;margin:0 0 10px;font-size:11px;line-height:1.6}
+.sticky-paper .paper-message:empty{display:none}
+.sticky-paper .paper-actions{gap:10px}
+.sticky-paper .paper-suggest{color:var(--panel-text);background:#17345180;border:1px solid #5a87ba66;box-shadow:none;font-size:11px;padding:10px 12px;border-radius:10px}
+.sticky-paper .paper-save{background:linear-gradient(110deg,#145fae,#2353a3);color:#f2f8ff;border:1px solid #609cecaa;box-shadow:inset 0 1px #afdcff26,0 4px 14px #1d66bd30;border-radius:10px;min-height:42px}
+.sticky-paper .paper-save:hover{box-shadow:inset 0 1px #c1e7ff55,0 4px 18px #3c86db40}
+.sticky-paper .paper-shortcut{font-size:12px;opacity:.6;color:var(--panel-text);padding-top:10px}
+.capture-page{background:#050d1d}
+.observatory .today-panel,.observatory .review-entry,.observatory .compact-records,.observatory .layout-overview{border-radius:var(--panel-radius);border:var(--panel-border);background:var(--panel-fill);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:var(--panel-padding)}
+.observatory .compact-records{margin-top:12px;padding-bottom:10px}
+.compact-records>.section-title{flex-wrap:wrap;row-gap:2px}
+.compact-records .toolbar{flex-wrap:wrap}
+.observatory .compact-records .empty{background:transparent;border:0;padding:24px 10px 28px}
+.observatory .compact-records .empty strong{font-size:15px;font-weight:500;margin:8px 0 18px;color:#c9d6f2}
+.observatory .compact-records .empty .primary{background:linear-gradient(110deg,#195eaa,#284f93);box-shadow:0 4px 18px #315acb22}
+.records-footer{padding:10px 0 0;flex-wrap:wrap;row-gap:8px}
+.records-footer .text-button{font-size:10px;background:transparent;border-color:transparent;padding:4px 0;color:#94afcf}
+.records-footer>div{gap:16px}
+.overview-metric{padding-left:12px;padding-right:12px}
+.overview-actions{gap:10px;padding-left:10px}
+.overview-actions .insight-button{padding:9px 11px}
+.home-tab [data-review-count]{font-size:10px;background:#24476d66;border-radius:6px;min-width:19px;padding:2px 5px;margin-left:3px}
+.compact-hint{display:none;color:#9bb0d1;font-size:10px;white-space:nowrap}
+.observatory .today-panel.is-empty,.observatory .review-entry.is-empty{height:48px;min-height:48px;padding:0 var(--panel-padding);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.today-panel.is-empty .today-header{margin:0;min-width:0}
+.today-panel.is-empty .today-heading{gap:8px}
+.today-panel.is-empty .today-heading .icon{width:18px;height:18px;filter:none}
+.today-panel.is-empty .today-heading>div,.review-entry.is-empty>div{display:flex;gap:8px;align-items:center;min-width:0}
+.is-empty .compact-hint{display:inline;overflow:hidden;text-overflow:ellipsis}
+.today-panel.is-empty h3,.review-entry.is-empty h3{font-size:12px;margin:0;white-space:nowrap}
+.today-panel.is-empty #todayDate,.today-panel.is-empty #taskProgress,.today-panel.is-empty #todayTasks,.review-entry.is-empty p{display:none}
+.today-panel.is-empty .add-task,.review-entry.is-empty .insight-button{width:auto;flex:none;font-size:10px;line-height:1.5;margin:0;padding:5px 0;border:0;background:transparent;color:#aedaff}
+.review-entry:not(.is-empty){min-height:88px}
+.review-entry:not(.is-empty) h3{margin-bottom:6px}
+.observatory .bottom-note{align-items:center;padding-top:18px;gap:14px;letter-spacing:0;line-height:20px}
+.bottom-note .scene-status,.bottom-note>.text-button{min-height:34px;display:flex;align-items:center;line-height:20px;padding:6px 10px;font-size:10px}
+.bottom-note em{margin:0;line-height:20px}
+@media(max-width:1230px){.overview-metric{padding-inline:8px}.overview-actions{padding-left:4px}.observatory .layout-overview{padding:12px}.observatory .compact-records{padding:16px}.compact-records .toolbar button{padding:6px 8px}}
+@media(min-width:761px) and (max-width:980px){.sidebar .library-dot{margin-inline:0}.today-panel.is-empty .today-heading .icon{display:none}.compact-hint{font-size:9px}.observatory .today-panel.is-empty,.observatory .review-entry.is-empty{padding-inline:12px}}
+@media(max-width:760px){.observatory .right-column{padding-top:0;display:grid;gap:12px}.observatory .right-column .today-panel,.observatory .right-column .review-entry{display:none}.observatory .layout-overview{margin:0;padding:12px;min-height:64px}.observatory .compact-records{margin:0;padding:16px}.sticky-paper .paper-content{min-height:120px}.observatory .bottom-note{justify-content:space-between;flex-wrap:nowrap;gap:8px}.bottom-note .scene-status,.bottom-note>.text-button{padding-inline:8px;font-size:9px}.records-footer>div{gap:12px}}

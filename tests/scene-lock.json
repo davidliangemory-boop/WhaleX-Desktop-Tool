@@ -1,5 +1,10 @@
 {
   "referenceCommit": "9952432190004e940daa848a41e2f2ede74d070f",
+  "approvedTypographyException": {
+    "date": "2026-09-30",
+    "previousCommit": "b39932da6a282d22291bf165ccca562c0d0c312f",
+    "scope": "Remove redundant hero description and reduce only the text layer; preserve the hero image, canvas geometry, Retina renderer, backdrop and animation byte-for-byte."
+  },
   "approvedRenderingException": {
     "date": "2026-09-30",
     "previousCommit": "ca776090cc3d5f3ed05da96d5c14798e1772aa91",
@@ -13,7 +18,7 @@
     "web/assets/cosmic-landscape.webp": "7e831316cd5f3f4e979c18c5a3f17d49b6aba86fe805c540d1cbaad7c3da0d8b",
     "web/assets/whale-luminous.webp": "61bbd715ce412501e589ffde0fd2fa68350c38b16461014790d53d96a1900145"
   },
-  "heroSha256": "aedcc20c148d7f349d24745971f74315197bc73cdb47085e7ae4e277a35915f3",
+  "heroSha256": "a3884e7e6df6d6b47bc2c4b7b9ec29e2a3666364afd89cc6ecc7515ac6eb1f6d",
   "geometry": {
     "1905x943": {
       "hero": [

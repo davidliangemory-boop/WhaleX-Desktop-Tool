@@ -36,9 +36,12 @@
       (!reviewConfig.window||Date.parse(r.payload.created)>=now-Number(reviewConfig.window)*86400000)&&L.tagMatches(r.payload.tags,reviewConfig.tag||''))
       .sort((a,b)=>hash(day(new Date())+s+a.id)-hash(day(new Date())+s+b.id)).slice(0,count);
     const due=candidates.filter(r=>!seen.ids.includes(r.id));
-    document.querySelectorAll('[data-review-count]').forEach(el=>el.textContent=due.length);
-    $('#weekCount').textContent=active().filter(r=>L.queryMatches(r.payload,L.parseQuery('本周'))).length;
-    $('#inboxCount').textContent=active().filter(r=>r.payload.libraryId==='lib-inbox'||!r.payload.tags.length).length;
+    const week=active().filter(r=>L.queryMatches(r.payload,L.parseQuery('本周'))).length;
+    const inbox=active().filter(r=>r.payload.libraryId==='lib-inbox'||!r.payload.tags.length).length;
+    const paintCount=(selector,n)=>document.querySelectorAll(selector).forEach(el=>{el.textContent=n?String(n):'';el.hidden=!n;});
+    paintCount('[data-review-count]',due.length);paintCount('#weekCount',week);paintCount('#inboxCount',inbox);
+    $('.layout-overview').hidden=!(week||inbox||due.length);
+    $('.review-entry').classList.toggle('is-empty',!due.length);
     document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',selection.view==='review'?b.dataset.act==='review':b.dataset.act==='recent'));
     const create=$('#workflowCreate');if(create)create.hidden=selection.type!=='Workflow';
   }

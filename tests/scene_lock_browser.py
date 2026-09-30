@@ -53,8 +53,8 @@ try:
             if refurl:
                 refpage=context.new_page()
                 old=scene(refpage,refurl,w,h)
-                # Whale antialiasing is the approved exception; backdrop and positions are not.
-                for field in ['hero','canvas','sky','backdrop']:
+                # This visual pass uses the approved Retina baseline; every scene pixel is locked.
+                for field in ['hero','canvas','sky','whale','backdrop']:
                     assert actual[field]==old[field], f'Existing {field} changed at {key}'
                 refpage.close()
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'), f'Horizontal overflow at {key}'
@@ -74,7 +74,7 @@ try:
             assert current['hero']==manifest['geometry']['390x844']['hero']
             if refurl:
                 oldpage=retina.new_page();old=scene(oldpage,refurl,390,844)
-                for field in ['hero','canvas','sky','backdrop']:
+                for field in ['hero','canvas','sky','whale','backdrop']:
                     assert current[field]==old[field], f'Mobile {field} changed at DPR {scale}'
                 oldpage.close()
             errors=[];mobile.on('pageerror',lambda error:errors.append(str(error)))

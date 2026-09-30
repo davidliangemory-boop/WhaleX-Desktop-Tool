@@ -17,8 +17,8 @@
       <header class="paper-head" data-tauri-drag-region><span class="paper-brand" data-tauri-drag-region>✦ ${record ? '编辑提示词' : '记录你的想法'}</span>
         <div class="paper-controls"><button type="button" data-action="pin" title="切换窗口置顶" aria-label="切换窗口置顶">⌃</button><button type="button" data-action="close" title="收起便签，保留草稿" aria-label="收起便签">×</button></div></header>
       <form class="capture-form">
-        <textarea name="content" class="paper-content" maxlength="200000" placeholder="在这里输入提示词、想法或笔记…\n\n先记下来，稍后再整理。" aria-label="提示词内容" required></textarea>
-        <div class="paper-under"><span data-draft>草稿自动保留在本机</span><span data-count>0 字</span></div>
+        <textarea name="content" class="paper-content" maxlength="200000" placeholder="输入提示词、想法或笔记…" aria-label="提示词内容" required></textarea>
+        <div class="paper-under"><span data-draft>草稿自动保留在本机</span><span data-count hidden></span></div>
         <details class="capture-details" ${record ? 'open' : ''}><summary>标签与归属 <small>可稍后整理</small></summary>
         <input class="paper-title" name="title" maxlength="160" placeholder="标题（可留空）" aria-label="标题">
         <div class="field-head"><label>保存到资料库</label><button type="button" class="paper-link" data-action="newlib">＋ 新建库</button></div>
@@ -26,12 +26,13 @@
         <div class="inline-library" hidden><input name="newlib" maxlength="60" placeholder="新资料库名称" aria-label="新资料库名称"><button type="button" data-action="createlib">创建</button></div>
         <label class="paper-label">标签 <small>按回车或逗号添加</small></label>
         <div class="tag-editor"><div data-tags></div><input name="tag" maxlength="200" placeholder="＋ 标签/子标签" aria-label="添加标签" list="${suggestionId}"></div><datalist id="${suggestionId}"></datalist></details>
-        <div class="paper-message" role="status" aria-live="polite">${draft ? '已恢复上次未保存的草稿' : '好想法，值得被好好保存。'}</div>
+        <div class="paper-message" role="status" aria-live="polite">${draft ? '已恢复上次未保存的草稿' : ''}</div>
         <footer class="paper-actions"><button type="button" class="paper-suggest" data-action="suggest">✧ 归档建议</button><button type="submit" class="paper-save">${record ? '保存修改' : '保存记录'} <span>↗</span></button></footer>
         <div class="paper-shortcut">Ctrl / ⌘ + Enter 保存</div>
       </form></section>`;
     const form = host.querySelector('form'), field = name => form.elements.namedItem(name);
     const message = text => { host.querySelector('.paper-message').textContent = text; };
+    const renderCount = () => { const n=field('content').value.length, el=host.querySelector('[data-count]'); el.textContent=n?n.toLocaleString()+' 字':'';el.hidden=!n; };
     for (const name of ['title', 'content', 'type']) field(name).value = initial[name] || (name === 'type' ? 'Prompt' : '');
     async function refreshLibraries() {
       const selected = field('libraryId').value || initial.libraryId;
@@ -48,7 +49,7 @@
     function addTags() { chosenTags = L.tags([...chosenTags, ...L.tags(field('tag').value)]); field('tag').value = ''; renderTags(); persist(); }
     function values() { return { ...current?.payload, title: field('title').value, content: field('content').value, type: field('type').value, libraryId: field('libraryId').value, tags: L.tags([...chosenTags, ...L.tags(field('tag').value)]) }; }
     function persist() {
-      host.querySelector('[data-count]').textContent = field('content').value.length.toLocaleString() + ' 字';
+      renderCount();
       try { localStorage.setItem(draftKey, JSON.stringify({ ...values(), expected: current?.changeId })); host.querySelector('[data-draft]').textContent = '草稿已保留在本机'; }
       catch { host.querySelector('[data-draft]').textContent = '草稿暂存失败，请及时保存'; }
     }
@@ -93,14 +94,14 @@
         const libName = field('libraryId').selectedOptions[0]?.text || '资料库';
         if (current) current = row;
         else { field('content').value = ''; field('title').value = ''; field('tag').value = ''; chosenTags = []; renderTags(); }
-        host.querySelector('[data-count]').textContent = field('content').value.length + ' 字';
+        renderCount();
         host.querySelector('[data-draft]').textContent = '已保存';
         message('已保存到 ' + libName + (S.session() ? ' · 等待自动同步' : ' · 仅本机'));
         onSaved(row); field('content').focus();
       } catch (error) { message('保存失败：' + error.message); }
       finally { saving = false; btn.disabled = false; }
     });
-    renderTags(); host.querySelector('[data-count]').textContent = field('content').value.length + ' 字';
+    renderTags(); renderCount();
     const changed = () => void refreshLibraries(); window.addEventListener('whalex-change', changed);
     return { focus: () => field('content').focus(), restoreDraft: payload => { if(field('content').value.trim())return false;for(const name of ['title','content','type','libraryId'])field(name).value=payload[name];chosenTags=L.tags(payload.tags);renderTags();persist();field('content').focus();return true; }, setType: type => { if (L.TYPES.includes(type)) { field('type').value = type; persist(); field('content').focus(); } }, suggest: () => host.querySelector('[data-action="suggest"]').click(), dispose: () => { disposed = true; host.removeEventListener('click', clickHandler); window.removeEventListener('whalex-change', changed); }, persist };
   }

@@ -47,25 +47,26 @@
     if(version!==renderVersion||scope!==S.scope())return;
     const active = notes().filter(r => !r.payload.archived), libs = libraries();
     const counts = { all: active.length, today: active.filter(r => today(r.payload.created)).length, favorites: active.filter(r => r.payload.favorite).length };
-    document.querySelectorAll('[data-count]').forEach(el => { if (el.dataset.count in counts) el.textContent = counts[el.dataset.count]; });
+    document.querySelectorAll('[data-count]').forEach(el => { if (el.dataset.count in counts) { const n=counts[el.dataset.count]; el.textContent=n?String(n):''; el.hidden=!n; } });
     document.querySelectorAll('[data-collection-count]').forEach(el => { const key = el.dataset.collectionCount; el.textContent = key === 'favorites' ? counts.favorites : active.filter(r => r.payload.type === key).length; });
-    $('#libraryNav').innerHTML = libs.map(l => `<button class="nav-item ${view === 'lib:' + l.id ? 'active' : ''}" data-view="lib:${L.esc(l.id)}" title="${L.esc(l.payload.name)}"><i class="library-dot dot-${l.payload.color}"></i><span>${L.esc(l.payload.name)}</span><em>${active.filter(r => r.payload.libraryId === l.id).length}</em></button>`).join('');
+    $('#libraryNav').innerHTML = libs.map(l => { const n=active.filter(r=>r.payload.libraryId===l.id).length; return `<button class="nav-item ${view === 'lib:' + l.id ? 'active' : ''}" data-view="lib:${L.esc(l.id)}" title="${L.esc(l.payload.name)}"><i class="library-dot dot-${l.payload.color}"></i><span>${L.esc(l.payload.name)}</span>${n?`<em>${n}</em>`:''}</button>`; }).join('');
     document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
     document.querySelectorAll('.toolbar [data-type]').forEach(b => b.classList.toggle('active', b.dataset.type === type));
     const names = { all: '最近记录', review:'最近记录', inbox:'待整理', today: '今天的记录', favorites: '我的收藏', archived: '已归档' };
     $('#viewTitle').textContent = names[view] || libs.find(l => view === 'lib:' + l.id)?.payload.name || '资料库';
-    const arr = filtered(); $('#viewSubtitle').textContent = `${arr.length} 条记录${arr.length>displayLimit?' · 显示最近 '+displayLimit+' 条':''}${tag ? ' · #' + tag : ''}${type !== 'all' ? ' · ' + type : ''}`;
+    const arr = filtered(); $('#viewSubtitle').textContent = arr.length?`${arr.length} 条记录${arr.length>displayLimit?' · 显示最近 '+displayLimit+' 条':''}${tag ? ' · #' + tag : ''}${type !== 'all' ? ' · ' + type : ''}`:''; $('#viewSubtitle').hidden=!arr.length;
     const allTags = [];
     $('#tagFilter').innerHTML = (tag ? `<button class="filter-tag active" data-tag="">清除 #${L.esc(tag)} ×</button>` : '') + allTags.map(t => `<button class="filter-tag ${tag === t ? 'active' : ''}" data-tag="${L.esc(t)}"># ${L.esc(t)}</button>`).join('');
-    $('#noteGrid').innerHTML = arr.length ? arr.slice(0,displayLimit).map(r=>W.card(r,libs.find(l=>l.id===r.payload.libraryId)?.payload.name||'未分类')).join('') + (arr.length>displayLimit&&displayLimit>3 ? '<button class="record-more" data-act="more">再显示 50 条 · 共 '+arr.length+' 条</button>' : '') : '<div class="empty"><strong>'+(view==='review'?'今日回顾已完成或暂无旧记录':search||tag?'暂时没有匹配的记录':'好想法，从第一张便签开始')+'</strong><p>'+(view==='review'?'保存旧记录后，会按回顾设置选出每天的内容。':search||tag?'试试其他关键词，或清除筛选。':'在右侧先写下来，分类与标签可以稍后补充。')+'</p><button class="primary" data-act="'+(view==='review'?'reviewsettings':'focus')+'">'+(view==='review'?'调整回顾设置':'记录一个想法 ↗')+'</button></div>';
+    $('#noteGrid').innerHTML = arr.length ? arr.slice(0,displayLimit).map(r=>W.card(r,libs.find(l=>l.id===r.payload.libraryId)?.payload.name||'未分类')).join('') + (arr.length>displayLimit&&displayLimit>3 ? '<button class="record-more" data-act="more">再显示 50 条 · 共 '+arr.length+' 条</button>' : '') : '<div class="empty"><strong>'+(view==='review'?'今日回顾已完成或暂无旧记录':search||tag?'暂时没有匹配的记录':'好想法，从第一张便签开始')+'</strong><button class="primary" data-act="'+(view==='review'?'reviewsettings':'focus')+'">'+(view==='review'?'调整回顾设置':'记录一个想法 ↗')+'</button></div>';
     $('#todayDate').textContent = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
     const allTodos = active.filter(r => r.payload.type === 'Todo'), completed = allTodos.filter(r => r.payload.done).length;
-    $('#todayCount').textContent = allTodos.length ? `${completed}/${allTodos.length}` : '0';
+    $('#todayCount').textContent = allTodos.length ? `${completed}/${allTodos.length}` : ''; $('#todayCount').hidden=!allTodos.length;
+    $('.today-panel').classList.toggle('is-empty',!allTodos.length);
     const progress = allTodos.length ? Math.round(completed / allTodos.length * 100) : 0;
     $('#taskProgress').setAttribute('aria-valuenow', progress);
     $('#taskProgress span').style.width = progress + '%';
     const todos = active.filter(r => r.payload.type === 'Todo').sort((a,b) => Number(a.payload.done) - Number(b.payload.done)).slice(0, 5);
-    $('#todayTasks').innerHTML = todos.length ? todos.map(r => `<div class="task ${r.payload.done ? 'done' : ''}"><button data-note-act="done" data-id="${L.esc(r.id)}" aria-label="${r.payload.done ? '标记未完成' : '标记完成'}">${r.payload.done ? '✓' : ''}</button><span>${L.esc(r.payload.title)}</span></div>`).join('') : `<p class="today-empty">今天已捕捉 ${counts.today} 条想法。<br>将便签类型设为 Todo，这里会显示待办。</p>`;
+    $('#todayTasks').innerHTML = todos.map(r => `<div class="task ${r.payload.done ? 'done' : ''}"><button data-note-act="done" data-id="${L.esc(r.id)}" aria-label="${r.payload.done ? '标记未完成' : '标记完成'}">${r.payload.done ? '✓' : ''}</button><span>${L.esc(r.payload.title)}</span></div>`).join('');
   }
   function queueRender() { clearTimeout(renderTimer); renderTimer = setTimeout(() => void render().catch(e => toast(e.message)), 50); }
   async function openEditor(record) {
@@ -90,7 +91,7 @@
       const request = pip && !pip.closed ? Promise.resolve(pip) : window.documentPictureInPicture.requestWindow({ width: 420, height: 600 });
       pip = await request; floatingComposer?.dispose();
       pip.document.head.innerHTML = '';
-      for (const path of ['./styles.css','./workspace.css']) { const link = pip.document.createElement('link'); link.rel = 'stylesheet'; link.href = new URL(path, location.href).href; pip.document.head.appendChild(link); }
+      for (const path of ['./styles.css','./workspace.css','./refinement.css?v=20260930-glass']) { const link = pip.document.createElement('link'); link.rel = 'stylesheet'; link.href = new URL(path, location.href).href; pip.document.head.appendChild(link); }
       pip.document.title = 'WhaleX · 悬浮输入'; pip.document.body.className = 'capture-page'; pip.document.body.innerHTML = '<div id="captureRoot"></div>';
       const thisPip = pip;
       floatingComposer = await window.WhaleXComposer.mount(pip.document.querySelector('#captureRoot'), { record, draftSlot: 'floating', onClose: () => thisPip.close() });

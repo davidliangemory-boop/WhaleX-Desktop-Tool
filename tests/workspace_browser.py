@@ -18,7 +18,7 @@ def check(name,value=True):
     checks.append(name);print('PASS:',name,flush=True)
 def ready(page):
     page.wait_for_selector('#inlineComposer textarea')
-    page.wait_for_function('() => document.querySelector("#weekCount")?.textContent==="0" || document.querySelectorAll(".note-card").length>0')
+    page.wait_for_function('() => document.querySelector("#noteGrid .empty") || document.querySelectorAll(".note-card").length>0')
 def close(page):
     if page.locator('#workspaceDialog').evaluate('e=>e.open'):page.locator('[data-close=workspaceDialog]').click()
 def select_home(page):
@@ -59,7 +59,8 @@ try:
         quick=page.evaluate("async()=> (await WhaleXStore.all()).find(r=>r.kind==='note'&&!r.deleted)")
         check('capture requires only content',quick['payload']['libraryId']=='lib-inbox' and quick['payload']['title']=='先记下来，稍后再整理')
         page.locator('#toast [data-act=undocapture]').click()
-        expect(page.locator('#inboxCount')).to_have_text('0')
+        expect(page.locator('#inboxCount')).to_have_text('')
+        expect(page.locator('#inboxCount')).to_be_hidden()
         check('undo returns content to draft without losing it',page.locator('#inlineComposer [name=content]').input_value()=='先记下来，稍后再整理')
         page.locator('#inlineComposer [name=content]').fill('')
         fixture=page.evaluate("""async()=> {
