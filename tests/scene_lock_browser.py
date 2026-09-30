@@ -18,7 +18,7 @@ def scene(page, url, w, h):
     page.set_viewport_size({'width':w,'height':h})
     page.goto(url)
     page.wait_for_function('() => window.WhaleXScene?.inspect().spriteReady')
-    page.wait_for_selector('#inlineComposer textarea')
+    page.wait_for_selector('#inlineComposer textarea',state='attached')
     page.wait_for_timeout(250)
     return page.evaluate('''() => {
       const rect=e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height].map(n=>Math.round(n*100)/100)};

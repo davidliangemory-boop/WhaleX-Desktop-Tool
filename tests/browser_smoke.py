@@ -20,7 +20,8 @@ def check(name,condition=True):
     checks.append(name)
     print('PASS:',name,flush=True)
 def ready(page):
-    page.wait_for_selector('#inlineComposer textarea',timeout=15000)
+    page.wait_for_selector('#inlineComposer textarea',state='attached',timeout=15000)
+    page.locator('#recordTrigger').click()
     page.wait_for_function("() => document.querySelectorAll('#inlineComposer [name=libraryId] option').length >= 4")
     page.evaluate('() => WhaleXStore.ready')
 def rows(page): return page.evaluate('() => WhaleXStore.all()')
@@ -106,7 +107,7 @@ with sync_playwright() as p:
         page.wait_for_function('() => !document.querySelector("#editorDialog").open')
         check('editing updates without duplicating',len(notes(page))==2 and any(r['payload']['content']=='更新后的提示词' for r in notes(page)))
         page.evaluate("() => WhaleXStore.put('note',{title:'<img src=x onerror=alert(1)>',content:'<script>bad()</script>',tags:['<x>']})")
-        page.wait_for_timeout(150)
+        page.wait_for_function("() => document.querySelector('#noteGrid').textContent.includes('<script>bad()</script>')")
         check('user markup escaped',page.locator('#noteGrid img').count()==0 and '<script>' in page.locator('#noteGrid').inner_text())
         check('no desktop horizontal overflow',page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
         page.evaluate("() => WhaleXStore.metadata('review',{count:7,age:30})")
@@ -171,4 +172,3 @@ with sync_playwright() as p:
     finally:
         context.close(); browser.close(); server.shutdown()
 print(f'{len(checks)} browser checks passed. Supabase transport mocked; native desktop and live backend not covered.')
-

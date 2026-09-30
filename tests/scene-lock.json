@@ -2,8 +2,8 @@
   "referenceCommit": "9952432190004e940daa848a41e2f2ede74d070f",
   "approvedTypographyException": {
     "date": "2026-09-30",
-    "previousCommit": "b39932da6a282d22291bf165ccca562c0d0c312f",
-    "scope": "Remove redundant hero description and reduce only the text layer; preserve the hero image, canvas geometry, Retina renderer, backdrop and animation byte-for-byte."
+    "previousCommit": "9f9430a43829ad03edfb11b6a6d4081df4f3a990",
+    "scope": "User requested removing all central brand text. Keep hero image/container, canvas geometry, Retina renderer, backdrop and animation byte-for-byte; only frame the scene with solid UI."
   },
   "approvedRenderingException": {
     "date": "2026-09-30",
@@ -18,7 +18,7 @@
     "web/assets/cosmic-landscape.webp": "7e831316cd5f3f4e979c18c5a3f17d49b6aba86fe805c540d1cbaad7c3da0d8b",
     "web/assets/whale-luminous.webp": "61bbd715ce412501e589ffde0fd2fa68350c38b16461014790d53d96a1900145"
   },
-  "heroSha256": "a3884e7e6df6d6b47bc2c4b7b9ec29e2a3666364afd89cc6ecc7515ac6eb1f6d",
+  "heroSha256": "aa2451250d920ae4c2ea9b6640c5a5d02a1747a8afba05d97f141a8826da3c2a",
   "geometry": {
     "1905x943": {
       "hero": [
