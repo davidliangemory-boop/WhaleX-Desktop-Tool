@@ -1,12 +1,11 @@
-/* WhaleX Observatory. Original Canvas/CSS implementation; research notes in docs/MOTION_DESIGN.md.
-   Decorative only: no network services, credentials, note reads, or data writes. */
+/* WhaleX Observatory. Original Canvas/CSS implementation; research: docs/MOTION_DESIGN.md.
+   Decorative only: no network services, credentials, note reads or writes. */
 (() => {
   'use strict';
   const hero = document.querySelector('.hero');
   if (!hero || window.WhaleXScene) return;
   const KEY = 'whalex_scene_mode_v1', TAU = Math.PI * 2;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  const coarse = matchMedia('(pointer: coarse)');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)'), coarse = matchMedia('(pointer: coarse)');
   let mode = 'cinematic';
   try { mode = localStorage.getItem(KEY) || mode; } catch {}
   if (!['cinematic', 'gentle', 'still'].includes(mode)) mode = 'cinematic';
@@ -19,8 +18,7 @@
   const ctx = sky.getContext('2d'), whaleCtx = sea.getContext('2d');
   if (!ctx || !whaleCtx) { layer.remove(); sea.remove(); return; }
   document.body.classList.add('observatory');
-  const control = document.createElement('label');
-  control.className = 'motion-control';
+  const control = document.createElement('label'); control.className = 'motion-control';
   control.innerHTML = '<span aria-hidden="true">✧</span><select aria-label="背景动效"><option value="cinematic">沉浸动效</option><option value="gentle">轻柔动效</option><option value="still">静止背景</option></select>';
   document.querySelector('.top-actions')?.prepend(control);
   const select = control.querySelector('select');
@@ -40,17 +38,15 @@
     g.addColorStop(0, `rgba(${color},${alpha})`); g.addColorStop(.22, `rgba(${color},${alpha * .4})`); g.addColorStop(1, `rgba(${color},0)`);
     c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
   }
-  // Cache dust and particle sprites once; no per-frame thousands-of-stars loop or blur filter.
+  // Cache expensive dust and glow textures once.
   const nebula = canvas(900, 620), nc = nebula.getContext('2d');
   for (let i = 0; i < 120; i++) {
     const x = random() * 900, ridge = 280 + Math.sin(x / 155) * 135;
-    glow(nc, x, ridge + (random() - .5) * 175, 35 + random() * 150, i % 3 ? '47,99,222' : '139,55,229', .025 + random() * .06);
+    glow(nc, x, ridge + (random() - .5) * 175, 35 + random() * 150, i % 3 ? '47,99,222' : '139,55,229', .045 + random() * .09);
   }
-  const galaxy = canvas(800, 800), gc = galaxy.getContext('2d');
-  gc.globalCompositeOperation = 'lighter';
+  const galaxy = canvas(800, 800), gc = galaxy.getContext('2d'); gc.globalCompositeOperation = 'lighter';
   for (let i = 0; i < 7200; i++) {
-    const r = Math.pow(random(), .72) * 350 + 4;
-    const arm = (i % 3) * TAU / 3;
+    const r = Math.pow(random(), .72) * 350 + 4, arm = (i % 3) * TAU / 3;
     const a = arm + Math.log(1 + r / 15) * 1.78 + (random() - .5) * (.2 + r / 620);
     const x = 400 + Math.cos(a) * r, y = 400 + Math.sin(a) * r;
     if (i % 5 === 0) glow(gc, x, y, 10 + r / 35, i % 2 ? '88,125,255' : '160,92,230', .032);
@@ -59,23 +55,28 @@
   }
   glow(gc, 400, 400, 150, '149,110,255', .4); glow(gc, 400, 400, 45, '231,222,255', .8);
   const halo = canvas(128, 128); glow(halo.getContext('2d'), 64, 64, 64, '95,176,255', .75);
-  // Exclude the baked-in planet/UI from the existing photo; only the whale is warped.
+  // Masked higher-resolution whale from the user's reference. Deform with source-over,
+  // then screen-composite ONCE: additive per-strip drawing creates visible seams.
+  const deform = canvas(784, 370), dc = deform.getContext('2d');
   const image = new Image();
-  image.onload = () => {
-    if (disposed) return;
-    const cut = canvas(600, 268), c = cut.getContext('2d'); c.scale(2, 2);
-    c.beginPath(); c.moveTo(24, 34); c.bezierCurveTo(36, 44, 61, 38, 73, 52);
-    c.bezierCurveTo(74, 44, 83, 42, 89, 42); c.bezierCurveTo(99, 56, 82, 67, 79, 76);
-    c.bezierCurveTo(93, 99, 126, 88, 163, 65); c.bezierCurveTo(200, 41, 236, 33, 269, 31);
-    c.bezierCurveTo(285, 30, 299, 33, 288, 48); c.bezierCurveTo(269, 74, 246, 91, 225, 100);
-    c.lineTo(218, 118); c.lineTo(207, 117); c.lineTo(211, 105);
-    c.bezierCurveTo(187, 115, 165, 117, 139, 126); c.lineTo(144, 117);
-    c.bezierCurveTo(105, 119, 79, 106, 71, 85); c.bezierCurveTo(68, 65, 65, 66, 55, 63);
-    c.bezierCurveTo(34, 58, 29, 47, 24, 34); c.closePath(); c.clip();
-    c.drawImage(image, 0, 0, 300, 134); sprite = cut; draw();
-  };
+  image.onload = () => { if (!disposed) { sprite = image; draw(); } };
   image.onerror = () => { if (!disposed) { document.body.classList.add('whale-fallback'); draw(); } };
-  image.src = new URL('./assets/hero-whale.webp', document.currentScript.src).href;
+  image.src = new URL('./assets/whale-isolated.webp', document.currentScript.src).href;
+  const globe = canvas(920, 920), pc = globe.getContext('2d');
+  pc.save(); pc.beginPath(); pc.arc(460, 460, 451, 0, TAU); pc.clip();
+  const pg = pc.createRadialGradient(410, 40, 10, 460, 430, 700);
+  pg.addColorStop(0, '#15385d'); pg.addColorStop(.43, '#081b36'); pg.addColorStop(1, '#030816');
+  pc.fillStyle = pg; pc.fillRect(0, 0, 920, 920);
+  for (let i = 0; i < 5200; i++) {
+    const x = random() * 920, y = random() * 920;
+    const ridge = Math.sin(x * .022 + Math.sin(y * .02)) + Math.sin(y * .015 - x * .005);
+    if (ridge > .38) {
+      pc.fillStyle = `rgba(85,149,200,${.025 + random() * .09})`;
+      pc.fillRect(x, y, 1 + random() * 11, .4 + random() * 1.4);
+      if (i % 39 === 0) glow(pc, x, y, 3, '163,193,231', .28);
+    }
+  }
+  pc.restore();
   function size() {
     if (disposed) return;
     width = Math.max(1, innerWidth); height = Math.max(1, innerHeight);
@@ -86,11 +87,11 @@
     draw();
   }
   function drawGalaxy(c, x, y, radius, tilt, phase, opacity) {
-    c.save(); c.translate(x, y); c.rotate(tilt); c.scale(1, .5);
-    c.rotate(phase); c.globalAlpha = opacity; c.globalCompositeOperation = 'lighter';
+    c.save(); c.translate(x, y); c.rotate(tilt); c.scale(1, .5); c.rotate(phase);
+    c.globalAlpha = opacity; c.globalCompositeOperation = 'lighter';
     c.drawImage(galaxy, -radius, -radius, radius * 2, radius * 2); c.restore();
   }
-  // A moving head AND a graduated trailing segment on a curved orbit, not a flashing straight div.
+  // Moving head and graduated trail on curved orbits, without high-frequency flashes.
   function orbit(c, x, y, rx, ry, tilt, phase, strength, front = false) {
     c.save(); c.translate(x, y); c.rotate(tilt); c.globalCompositeOperation = 'lighter';
     c.strokeStyle = `rgba(99,154,251,${.14 * strength})`; c.lineWidth = .7;
@@ -99,8 +100,7 @@
       const a = phase - j * .021, next = a + .025;
       if (front && Math.sin(a) < 0) continue;
       c.strokeStyle = `rgba(${front ? '99,203,255' : '147,126,255'},${(1 - j / 22) * strength * .78})`;
-      c.lineWidth = 1.1 + (1 - j / 22) * 1.4; c.beginPath();
-      c.ellipse(0, 0, rx, ry, 0, a, next); c.stroke();
+      c.lineWidth = 1.1 + (1 - j / 22) * 1.4; c.beginPath(); c.ellipse(0, 0, rx, ry, 0, a, next); c.stroke();
     }
     if (!front || Math.sin(phase) >= 0) {
       const bx = Math.cos(phase) * rx, by = Math.sin(phase) * ry;
@@ -111,15 +111,13 @@
   function drawSky(t) {
     ctx.clearRect(0, 0, width, height);
     const px = pointer.x, py = pointer.y;
-    ctx.save(); ctx.globalAlpha = focused ? .45 : .76;
+    ctx.save(); ctx.globalAlpha = focused ? .57 : .96;
     ctx.drawImage(nebula, -width * .1 + Math.sin(t * .032) * 40 + px * 9, -height * .12 + py * 6, width * 1.2, height * 1.25);
-    ctx.restore();
-    // Aurora ribbons, with independent time phases and stable blue/violet colour grading.
-    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.restore(); ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for (let band = 0; band < 3; band++) {
       for (let x = 0; x < width; x += 12) {
         const y = height * (.09 + band * .07) + Math.sin(x / 220 + t * .14 + band) * 35 + Math.sin(x / 67 - t * .09) * 9;
-        const a = (.015 + .019 * Math.pow(Math.sin(x / 180 + band + t * .08), 2)) * (focused ? .5 : 1);
+        const a = (.022 + .028 * Math.pow(Math.sin(x / 180 + band + t * .08), 2)) * (focused ? .5 : 1);
         const gradient = ctx.createLinearGradient(x, y - 95, x, y + 35);
         gradient.addColorStop(0, 'rgba(61,218,250,0)'); gradient.addColorStop(.8, `rgba(${band % 2 ? '146,100,238' : '67,199,238'},${a})`); gradient.addColorStop(1, 'rgba(61,218,250,0)');
         ctx.fillStyle = gradient; ctx.fillRect(x, y - 95, 12, 130);
@@ -133,11 +131,10 @@
       ctx.fillStyle = `rgba(187,216,255,${a})`; ctx.beginPath(); ctx.arc(x, y, s.r, 0, TAU); ctx.fill();
       if (i % 28 === 0) { ctx.save(); ctx.globalAlpha = a * .7; ctx.drawImage(halo, x - 12, y - 12, 24, 24); ctx.restore(); }
     }
-    drawGalaxy(ctx, width * .72 + px * 12, height * .18 + py * 9, Math.min(330, width * .25), -.26, t * .045, .54);
-    drawGalaxy(ctx, width * .27, height * .87, Math.min(240, width * .21), .21, -t * .035 + 2, .38);
+    drawGalaxy(ctx, width * .72 + px * 12, height * .18 + py * 9, Math.min(330, width * .25), -.26, t * .045, .8);
+    drawGalaxy(ctx, width * .27, height * .87, Math.min(240, width * .21), .21, -t * .035 + 2, .5);
     orbit(ctx, width * .54, height * .51, width * .48, height * .3, -.22, t * .28, .48);
     orbit(ctx, width * .5, height * .76, width * .52, height * .15, -.12, -t * .2 + 2.1, .35);
-    // Sparse, slow comet: no strobe, max one trail at a time.
     const flight = (t + 3) % 19;
     if (flight < 4.5 && effective() === 'cinematic') {
       const x = width * .18 + flight * width * .14, y = height * .035 + flight * 28;
@@ -148,25 +145,27 @@
   }
   function drawWhale(t) {
     whaleCtx.clearRect(0, 0, hw, hh);
-    const centerX = hw * .5 + pointer.x * 7, centerY = hh * .33 + pointer.y * 4;
-    const w = Math.min(hw * .78, 570), h = w * 134 / 300;
+    const centerX = hw * .5 + pointer.x * 7, centerY = hh * .28 + pointer.y * 4;
+    const w = Math.min(hw * .84, hh * 1.21, 580), h = w * 207 / 490;
     const horizon = whaleCtx.createRadialGradient(hw * .5, hh * 1.48, hh * .92, hw * .5, hh * 1.48, hh * 1.17);
     horizon.addColorStop(0, '#050d2200'); horizon.addColorStop(.81, '#102c591a'); horizon.addColorStop(.9, '#579cf06b'); horizon.addColorStop(.912, '#b4eeff96'); horizon.addColorStop(.925, '#316fdb3b'); horizon.addColorStop(1, '#0c154200');
+    whaleCtx.save(); whaleCtx.globalAlpha = .6; whaleCtx.drawImage(globe, hw * .5 - hh * 1.15, hh * .35, hh * 2.3, hh * 2.3); whaleCtx.restore();
     whaleCtx.fillStyle = horizon; whaleCtx.fillRect(0, 0, hw, hh);
     drawGalaxy(whaleCtx, hw * .76, hh * .15, Math.min(hw * .24, 170), -.35, -t * .055, .75);
     orbit(whaleCtx, centerX, centerY + 42, w * .59, h * .32, -.14, t * .45, .7);
     if (sprite) {
-      whaleCtx.save(); whaleCtx.translate(centerX + Math.sin(t * .23) * 13, centerY + Math.sin(t * .65) * 7);
-      whaleCtx.rotate(Math.sin(t * .43) * .022);
-      whaleCtx.globalCompositeOperation = 'screen';
-      const strips = 64, sw = sprite.width / strips;
+      dc.clearRect(0, 0, deform.width, deform.height);
+      dc.fillStyle = '#000'; dc.fillRect(0, 0, deform.width, deform.height);
+      const strips = 98, sw = sprite.width / strips, dw = 700 / strips;
       for (let i = 0; i < strips; i++) {
         const u = i / (strips - 1), tail = Math.pow(1 - u, 2.4);
-        const wave = Math.sin(t * 1.2 - u * 5) * tail * w * .023;
-        const dy = h * (1 + Math.sin(t * 1.2 - u * 5 + .4) * tail * .028);
-        whaleCtx.drawImage(sprite, i * sw, 0, sw, sprite.height, -w / 2 + i * w / strips, -h / 2 + wave, w / strips + .6, dy);
+        const wave = Math.sin(t * 1.2 - u * 5) * tail * 14;
+        const dh = 700 * 207 / 490 * (1 + Math.sin(t * 1.2 - u * 5 + .4) * tail * .02);
+        dc.drawImage(sprite, i * sw, 0, sw, sprite.height, 42 + i * dw, 35 + wave, dw + .2, dh);
       }
-      whaleCtx.restore();
+      whaleCtx.save(); whaleCtx.translate(centerX + Math.sin(t * .23) * 12, centerY + Math.sin(t * .65) * 6);
+      whaleCtx.rotate(Math.sin(t * .43) * .022); whaleCtx.globalCompositeOperation = 'screen';
+      whaleCtx.drawImage(deform, -w * .56, -h * .62, w * 1.12, w * 370 / 700); whaleCtx.restore();
       whaleCtx.save(); whaleCtx.globalCompositeOperation = 'lighter';
       for (let i = 0; i < 24; i++) {
         const age = (t * .15 + i / 24) % 1;
@@ -193,10 +192,8 @@
   function resetCard() { if (activeCard) { activeCard.style.removeProperty('--spot-x'); activeCard.style.removeProperty('--spot-y'); activeCard = null; } }
   function refresh() {
     cancelAnimationFrame(raf); raf = 0; last = 0;
-    document.body.dataset.sceneMode = effective();
-    document.body.dataset.scenePaused = String(!allowed());
-    select.value = mode;
-    select.title = reduced.matches ? '系统已要求减少动态：背景保持静止' : '仅影响背景，不影响记录和同步';
+    document.body.dataset.sceneMode = effective(); document.body.dataset.scenePaused = String(!allowed());
+    select.value = mode; select.title = reduced.matches ? '系统已要求减少动态：背景保持静止' : '仅影响背景，不影响记录和同步';
     if (!allowed()) { resetCard(); interactionAnimations.forEach(a => a.cancel()); interactionAnimations.clear(); pointer = { x: 0, y: 0 }; }
     draw(); if (allowed()) raf = requestAnimationFrame(tick);
   }
@@ -221,8 +218,7 @@
   });
   const updateFocus = () => { focused = !!document.activeElement?.matches('input,textarea,select,[contenteditable=true]'); document.body.classList.toggle('scene-writing', focused); };
   on(document, 'focusin', updateFocus); on(document, 'focusout', () => queueMicrotask(updateFocus));
-  on(document, 'visibilitychange', refresh);
-  on(reduced, 'change', refresh); on(coarse, 'change', size);
+  on(document, 'visibilitychange', refresh); on(reduced, 'change', refresh); on(coarse, 'change', size);
   on(window, 'resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(size, 100); }, { passive: true });
   on(window, 'storage', e => { if (e.key === KEY && ['cinematic', 'gentle', 'still'].includes(e.newValue)) { mode = e.newValue; refresh(); } });
   const observer = typeof IntersectionObserver !== 'undefined' ? new IntersectionObserver(entries => { heroVisible = entries[0].isIntersecting; if (heroVisible) draw(); }) : null;

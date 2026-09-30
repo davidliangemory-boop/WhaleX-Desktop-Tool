@@ -1,14 +1,12 @@
-"""Real Chromium animation, accessibility and functional regression checks.
-Runs locally or in CI; screenshots are rendered UI, not concept art.
-"""
+"""Real Chromium motion/accessibility tests without weakening the site's CSP."""
 from functools import partial
-from hashlib import sha256
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Thread
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 import json
 import os
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'tests' / 'motion-review'
@@ -18,11 +16,17 @@ def check(name, condition):
     assert condition, name
     checks.append(name)
     print('PASS:', name, flush=True)
-
+def ready(page):
+    page.wait_for_selector('.whale-canvas')
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        if page.evaluate('() => Boolean(window.WhaleXScene?.inspect().spriteReady)'):
+            return
+        page.wait_for_timeout(100)
+    raise AssertionError('Whale sprite failed to load')
 class Quiet(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
-
 server = ThreadingHTTPServer(('127.0.0.1', 0), partial(Quiet, directory=str(ROOT / 'web')))
 Thread(target=server.serve_forever, daemon=True).start()
 url = f'http://127.0.0.1:{server.server_port}/'
@@ -38,9 +42,10 @@ try:
         page.on('pageerror', lambda e: errors.append(str(e)))
         page.on('request', lambda r: requests.append(r.url))
         page.goto(url)
-        page.wait_for_function('window.WhaleXScene?.inspect().spriteReady')
+        ready(page)
         page.wait_for_selector('#inlineComposer textarea')
         page.wait_for_timeout(700)
+        page.screenshot(path=str(OUT/'initial-preview.png'), full_page=True)
         first = page.evaluate('WhaleXScene.inspect()')
         page.wait_for_timeout(650)
         second = page.evaluate('WhaleXScene.inspect()')
@@ -58,7 +63,7 @@ try:
         page.locator('#inlineComposer [name=tag]').press('Enter')
         check('writing mode enabled while editing', page.locator('body').evaluate("e=>e.classList.contains('scene-writing')"))
         page.locator('#inlineComposer .paper-save').click()
-        page.wait_for_function("document.querySelector('#noteGrid').textContent.includes('动态界面测试')")
+        expect(page.locator('#noteGrid')).to_contain_text('动态界面测试')
         saved = page.evaluate("async()=> (await WhaleXStore.all()).find(r=>r.kind==='note')")
         check('capture preserves text library and tag', saved['payload']['libraryId'] == 'lib-legal' and '动画验收' in saved['payload']['tags'])
         page.get_by_label('背景动效').select_option('still')
@@ -69,7 +74,7 @@ try:
         check('static mode stops requestAnimationFrame', page.evaluate('WhaleXScene.inspect().frames') == still['frames'])
         check('static whale remains pixel-identical', still_pixels == page.evaluate("document.querySelector('.whale-canvas').toDataURL()"))
         page.reload()
-        page.wait_for_function('window.WhaleXScene?.inspect().spriteReady')
+        ready(page)
         check('motion setting survives reload', page.evaluate('WhaleXScene.inspect().mode') == 'still')
         page.get_by_label('背景动效').select_option('cinematic')
         page.emulate_media(reduced_motion='reduce')
@@ -90,6 +95,7 @@ try:
         for w, h in [(1672,941), (1280,800), (980,800), (760,900), (390,844)]:
             page.set_viewport_size({'width':w,'height':h})
             page.wait_for_timeout(450)
+            page.screenshot(path=str(OUT/f'width-{w}-preview.png'), full_page=True)
             check(f'no horizontal overflow at {w}px', page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
         page.screenshot(path=str(OUT/'mobile-preview.png'), full_page=True)
         page.set_viewport_size({'width':1672,'height':941})
