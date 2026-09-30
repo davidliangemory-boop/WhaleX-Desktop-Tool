@@ -63,6 +63,8 @@ with sync_playwright() as p:
     executable=os.environ.get('WHALEX_CHROMIUM_PATH')
     browser=p.chromium.launch(headless=True,**({'executable_path':executable} if executable else {}),args=['--no-sandbox'])
     context=browser.new_context(viewport={'width':1536,'height':1000})
+    # This suite checks storage/sync across devices; motion has its own GPU regression.
+    context.add_init_script("localStorage.setItem('whalex_scene_mode_v1','still')")
     page=context.new_page(); errors=[]
     page.on('pageerror',lambda error:errors.append(str(error)))
     try:
@@ -123,6 +125,7 @@ with sync_playwright() as p:
         page.wait_for_function("() => WhaleXSync.status().mode === 'synced'")
         check('push acknowledges dirty records',any(r['kind']=='note' for r in cloud['user-a'].values()) and all(not r['dirty'] for r in rows(page)))
         second_context=browser.new_context(viewport={'width':1200,'height':900})
+        second_context.add_init_script("localStorage.setItem('whalex_scene_mode_v1','still')")
         second_context.route('https://test.supabase.co/**',api)
         device=second_context.new_page(); device.goto(BASE); ready(device)
         device.evaluate("() => WhaleXSync.configure('https://test.supabase.co','sb_publishable_test')")

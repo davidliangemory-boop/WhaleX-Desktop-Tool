@@ -46,6 +46,8 @@ try:
         executable=os.environ.get('CHROMIUM_PATH') or os.environ.get('WHALEX_CHROMIUM_PATH')
         browser=pw.chromium.launch(headless=True,args=['--no-sandbox'],**({'executable_path':executable} if executable else {}))
         context=browser.new_context(viewport={'width':1905,'height':943})
+        # Functional workflows are isolated from the separately verified GPU animation loop.
+        context.add_init_script("localStorage.setItem('whalex_scene_mode_v1','still')")
         context.grant_permissions(['clipboard-read','clipboard-write'])
         context.route('https://models.example.test/**',model_route)
         context.route('https://api.flomoapp.com/**',flomo_route)
