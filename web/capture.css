@@ -52,3 +52,8 @@
 @media(max-height:600px){.capture-page.workbench .paper-content{min-height:92px}.capture-page.workbench .capture-form{padding-top:9px}.capture-page.workbench .paper-head{min-height:48px;padding-block:12px}.capture-page.workbench .paper-shortcut{display:none}}
 
 .capture-page.workbench .paper-head,.capture-page.workbench .capture-details,.capture-page.workbench .paper-actions{flex-shrink:0}
+.capture-page.workbench .paper-content{font-size:15px}
+.capture-page.workbench .paper-under,.capture-page.workbench .paper-message,.capture-page.workbench .paper-shortcut{font-size:12px}
+.capture-page.workbench .paper-actions{background:#0c1b35;padding-top:8px}
+.capture-page.workbench .paper-save{background:var(--accent);box-shadow:none}
+@media(max-width:420px){.capture-page.workbench .paper-content{font-size:16px}}

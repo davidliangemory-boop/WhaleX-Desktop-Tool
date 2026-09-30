@@ -72,6 +72,7 @@ try:
             {id:'today-one',title:'本周合同 Prompt',content:'今天的新合同提示词',libraryId:'lib-legal',tags:['工作/法务']}
           ];for(const p of defs)await WhaleXStore.put('note',p,{id:p.id});return defs;
         }""")
+        page.locator('#dockSummary').click()
         page.locator('.records-footer [data-act=browse]').click()
         page.wait_for_function('() => document.querySelectorAll(".note-card").length===4')
         check('overview comes from actual records',page.locator('#weekCount').text_content()=='1')

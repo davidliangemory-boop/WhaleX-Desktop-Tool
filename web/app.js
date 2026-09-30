@@ -2,7 +2,7 @@
   'use strict';
   const S = window.WhaleXStore, L = window.WhaleXLogic, C = window.WhaleXSync, W = window.WhaleXWorkspace;
   const $ = s => document.querySelector(s);
-  let rows = [], view = 'all', type = 'all', tag = '', search = '', composer, editor, pip, floatingComposer, toastTimer, renderTimer, renderVersion = 0, displayLimit = 3, undoCapture;
+  let rows = [], view = 'all', type = 'all', tag = '', search = '', composer, editor, pip, popupWindow, pipRecordId, floatingComposer, toastTimer, renderTimer, renderVersion = 0, displayLimit = 3, undoCapture;
   const icons = {
     menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
     home: '<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>', edit: '<path d="m14 4 6 6M4 20l5-1L21 7l-5-5L4 14Z"/>',
@@ -22,7 +22,7 @@
   function closeCapture(){ window.WhaleXFrame?.hide(); }
   function today(date) { return new Date(date).toDateString() === new Date().toDateString(); }
   const scrollBehavior = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
-  function browse() { $('.notes-section').scrollIntoView({ behavior: scrollBehavior(), block: 'start' }); }
+  function browse() { window.WhaleXFrame?.reveal(); }
   const libraries = () => rows.filter(r => r.kind === 'library' && !r.deleted);
   const notes = () => rows.filter(r => r.kind === 'note' && !r.deleted);
   function filtered() {
@@ -54,12 +54,26 @@
     $('#libraryNav').innerHTML = libs.map(l => { const n=active.filter(r=>r.payload.libraryId===l.id).length; return `<button class="nav-item ${view === 'lib:' + l.id ? 'active' : ''}" data-view="lib:${L.esc(l.id)}" title="${L.esc(l.payload.name)}"><i class="library-dot dot-${l.payload.color}"></i><span>${L.esc(l.payload.name)}</span>${n?`<em>${n}</em>`:''}</button>`; }).join('');
     document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
     document.querySelectorAll('.toolbar [data-type]').forEach(b => b.classList.toggle('active', b.dataset.type === type));
-    const names = { all: '最近记录', review:'最近记录', inbox:'待整理', today: '今天的记录', favorites: '我的收藏', archived: '已归档' };
-    $('#viewTitle').textContent = names[view] || libs.find(l => view === 'lib:' + l.id)?.payload.name || '资料库';
-    const arr = filtered(); $('#viewSubtitle').textContent = arr.length?`${arr.length} 条记录${arr.length>displayLimit?' · 显示最近 '+displayLimit+' 条':''}${tag ? ' · #' + tag : ''}${type !== 'all' ? ' · ' + type : ''}`:''; $('#viewSubtitle').hidden=!arr.length;
-    const allTags = [];
-    $('#tagFilter').innerHTML = (tag ? `<button class="filter-tag active" data-tag="">清除 #${L.esc(tag)} ×</button>` : '') + allTags.map(t => `<button class="filter-tag ${tag === t ? 'active' : ''}" data-tag="${L.esc(t)}"># ${L.esc(t)}</button>`).join('');
-    $('#noteGrid').innerHTML = arr.length ? arr.slice(0,displayLimit).map(r=>W.card(r,libs.find(l=>l.id===r.payload.libraryId)?.payload.name||'未分类')).join('') + (arr.length>displayLimit&&displayLimit>3 ? '<button class="record-more" data-act="more">再显示 50 条 · 共 '+arr.length+' 条</button>' : '') : '<div class="empty"><strong>'+(view==='review'?'今日回顾已完成或暂无旧记录':search||tag?'暂时没有匹配的记录':'还没有记录。好想法，从第一张便签开始。')+'</strong><button class="primary" data-act="'+(view==='review'?'reviewsettings':'focus')+'">'+(view==='review'?'调整回顾设置':'记录一个想法')+'</button></div>';
+    const labels={Prompt:'Prompt',Idea:'想法',Reference:'资料',Todo:'待办',Snippet:'片段',Workflow:'工作流'};
+    const names={all:'最近记录',review:'每日回顾',inbox:'待整理',today:'今天的记录',favorites:'我的收藏',archived:'已归档'};
+    const scopeName=names[view]||libs.find(l=>'lib:'+l.id===view)?.payload.name||'资料库';
+    const title=search?'搜索结果':type==='Workflow'?'工作流':scopeName;
+    $('#viewTitle').textContent=title;$('#dockTitle').textContent=title;
+    document.querySelectorAll('.sidebar .nav-item[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===type));
+    document.querySelectorAll('.sidebar .nav-item[data-act=review]').forEach(b=>b.classList.toggle('active',view==='review'));
+    document.querySelector('.sidebar [data-view=all]').classList.toggle('active',view==='all'&&type==='all');
+    const filters=W.filters(), chips=[];
+    if(search)chips.push(['search','关键词：'+search]);
+    if(tag)chips.push(['tag','#'+tag]);
+    if(type!=='all')chips.push(['type','类型：'+(labels[type]||type)]);
+    if(filters.library)chips.push(['extra','资料库：'+(libs.find(l=>l.id===filters.library)?.payload.name||'未分类')]);
+    if(filters.from||filters.to)chips.push(['extra','日期：'+(filters.from||'不限')+' – '+(filters.to||'不限')]);
+    const arr=filtered(), narrowed=chips.length>0;
+    $('#viewSubtitle').textContent=(search?'范围：'+(view==='all'?'全部资料库':scopeName)+' · ':'')+(arr.length?arr.length+' 条记录'+(arr.length>displayLimit?' · 显示最近 '+displayLimit+' 条':''):narrowed?'没有匹配记录':'');
+    $('#viewSubtitle').hidden=!arr.length&&!narrowed;
+    $('#dockPreview').textContent=arr.length?arr.length+' 条 · '+arr[0].payload.title:narrowed?'没有匹配记录 · 展开调整筛选':'写下第一条记录';
+    $('#tagFilter').innerHTML=chips.map(([key,label])=>'<button class="filter-tag" data-act="clearfilter" data-filter="'+key+'" aria-label="清除 '+L.esc(label)+'">'+L.esc(label)+' ×</button>').join('')+(narrowed?'<button class="filter-tag" data-act="resetsearch">重置全部筛选</button>':'');
+    $('#noteGrid').innerHTML=arr.length?arr.slice(0,displayLimit).map(r=>W.card(r,libs.find(l=>l.id===r.payload.libraryId)?.payload.name||'未分类',search)).join('')+(arr.length>displayLimit&&displayLimit>3?'<button class="record-more" data-act="more">再显示 50 条 · 共 '+arr.length+' 条</button>':''):'<div class="empty"><strong>'+(narrowed?'暂时没有匹配的记录':view==='review'?'今日回顾已完成或暂无旧记录':'还没有记录。好想法，从第一张便签开始。')+'</strong><button class="primary" data-act="'+(narrowed?'resetsearch':view==='review'?'reviewsettings':'focus')+'">'+(narrowed?'清除筛选':view==='review'?'调整回顾设置':'记录一个想法')+'</button></div>';
     $('#todayDate').textContent = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
     const allTodos = active.filter(r => r.payload.type === 'Todo'), completed = allTodos.filter(r => r.payload.done).length;
     $('#todayCount').textContent = allTodos.length ? `${completed}/${allTodos.length}` : ''; $('#todayCount').hidden=!allTodos.length;
@@ -74,36 +88,49 @@
   async function openEditor(record) {
     W.close();
     editor?.dispose(); const dialog = $('#editorDialog');
-    editor = await window.WhaleXComposer.mount($('#editorRoot'), { record, onSaved: () => { dialog.close(); queueRender(); }, onClose: () => dialog.close() });
+    editor = await window.WhaleXComposer.mount($('#editorRoot'), { record, onSaved: () => { dialog.close(); queueRender(); }, onClose: () => dialog.close(), onFloat:async (row,draft)=>{if(await float(row,draft))dialog.close();} });
     dialog.showModal(); editor.focus();
   }
-  async function float(record = null) {
-    if (window.__TAURI__) {
-      try { await window.__TAURI__.core.invoke(record ? 'open_sticky' : 'show_capture', record ? { id: record.id } : {}); }
-      catch (e) { toast('桌面便签未能打开：' + (e.message || e)); }
-      return;
-    }
-    if (!window.documentPictureInPicture) {
-      toast('浏览器不支持置顶画中画。已尝试打开普通便签窗口；真正置顶请使用桌面版。');
-      const win = window.open('./capture.html' + (record ? '?id=' + encodeURIComponent(record.id) : ''), 'WhaleXNote', 'width=440,height=620');
-      if (!win) toast('弹窗被拦截，请允许弹窗或使用桌面版'); return;
-    }
-    try {
-      // Request during the click gesture, before asynchronous storage work.
-      const request = pip && !pip.closed ? Promise.resolve(pip) : window.documentPictureInPicture.requestWindow({ width: 420, height: 600 });
-      pip = await request; floatingComposer?.dispose();
-      pip.document.head.innerHTML = '';
-      for (const path of ['./styles.css','./workspace.css','./refinement.css?v=20260930-glass','./frame.css?v=20260930-observatory-v3','./capture.css?v=20260930-capture-v3']) { const link = pip.document.createElement('link'); link.rel = 'stylesheet'; link.href = new URL(path, location.href).href; pip.document.head.appendChild(link); }
-      pip.document.title = 'WhaleX · 悬浮输入'; pip.document.body.className = 'capture-page workbench'; pip.document.body.innerHTML = '<div id="captureRoot"></div>';
-      const thisPip = pip;
-      floatingComposer = await window.WhaleXComposer.mount(pip.document.querySelector('#captureRoot'), { record, draftSlot: 'floating', onClose: () => thisPip.close() });
-      thisPip.addEventListener('pagehide', () => { floatingComposer?.dispose(); floatingComposer = null; pip = null; }, { once: true });
-      floatingComposer.focus(); pip.focus();
-    } catch (e) { toast('画中画未能打开：' + e.message + '。请直接点击“悬浮便签”重试。'); }
+  function updateFloatLabel(){
+    const active=pip&&!pip.closed||popupWindow&&!popupWindow.closed;
+    const label=active?'返回浮窗':window.__TAURI__||window.documentPictureInPicture?'悬浮便签':'独立便签';
+    $('#floatTrigger span').textContent=label;
+    $('#floatTrigger').title=window.__TAURI__?'打开桌面置顶便签':window.documentPictureInPicture?'置顶画中画；请保持工作台页面打开':'当前浏览器使用独立窗口，不能保证置顶';
+  }
+  async function float(record = null, handoff = null) {
+    let copied=false, kept=false;
+    const copyDraft=slot=>{
+      if(!handoff)return;
+      const key='whalex_draft_v2:'+S.scope()+':'+slot+':'+(record?.id||'new');
+      const old=S.readJSON(key);
+      if(old&&(old.content?.trim()||old.title?.trim())&&JSON.stringify(old)!==JSON.stringify(handoff)){kept=true;return;}
+      localStorage.setItem(key,JSON.stringify(handoff));copied=true;
+    };
+    const done=()=>{window.WhaleXFrame?.hide(false);updateFloatLabel();if(kept)toast('浮窗已有草稿，已为你保留；当前草稿仍在工作台。');else if(copied)toast('草稿已复制到浮窗，工作台草稿仍保留。');return true;};
+    try{
+      if(window.__TAURI__){copyDraft('capture');await window.__TAURI__.core.invoke(record?'open_sticky':'show_capture',record?{id:record.id}:{});return done();}
+      if(!window.documentPictureInPicture){
+        copyDraft('capture');
+        popupWindow=window.open('./capture.html'+(record?'?id='+encodeURIComponent(record.id):''),'WhaleXNote','width=440,height=620');
+        if(!popupWindow){toast('窗口被拦截。请允许本站弹窗后重试；草稿仍保留在本机。');return false;}
+        popupWindow.focus();return done();
+      }
+      if(pip&&!pip.closed&&pipRecordId===(record?.id||'new')){copyDraft('floating');if(!copied){pip.focus();return done();}}
+      // Keep the request within the user gesture, before mounting the composer.
+      const request=pip&&!pip.closed?Promise.resolve(pip):window.documentPictureInPicture.requestWindow({width:420,height:600});
+      copyDraft('floating');pip=await request;floatingComposer?.dispose();
+      pip.document.head.innerHTML='';
+      for(const path of ['./styles.css','./workspace.css','./refinement.css?v=20260930-glass','./frame.css?v=20261001-workbench-v4','./capture.css?v=20261001-workbench-v4']){const link=pip.document.createElement('link');link.rel='stylesheet';link.href=new URL(path,location.href).href;pip.document.head.appendChild(link);}
+      pip.document.title='WhaleX · 悬浮输入';pip.document.body.className='capture-page workbench';pip.document.body.innerHTML='<div id="captureRoot"></div>';
+      const thisPip=pip;pipRecordId=record?.id||'new';
+      floatingComposer=await window.WhaleXComposer.mount(pip.document.querySelector('#captureRoot'),{record,draftSlot:'floating',onClose:()=>thisPip.close()});
+      thisPip.addEventListener('pagehide',()=>{if(pip===thisPip){floatingComposer?.dispose();floatingComposer=null;pip=null;updateFloatLabel();}},{once:true});
+      floatingComposer.focus();pip.focus();return done();
+    }catch(e){toast('浮窗未能打开：'+e.message+'。草稿仍保留在本机。');return false;}
   }
   function settings() {
     const c = S.config(); $('#cloudUrl').value = c?.url || ''; $('#cloudKey').value = c?.key || '';
-    updateAccountUI(); W.fillConnections(); if(!$('#settingsDialog').open)$('#settingsDialog').showModal();
+    $('#cloudAdvanced').open=!c?.url; updateAccountUI(); W.fillConnections(); if(!$('#settingsDialog').open)$('#settingsDialog').showModal();
   }
   function updateAccountUI() {
     const s = S.session(); $('#accountNotice').textContent = s ? '当前账号：' + s.user.email + '。本机离线库与此账号分开保存。' : '未登录：记录仅保存在当前设备。';
@@ -129,8 +156,9 @@
     try {
       if (btn.dataset.close) return $('#' + btn.dataset.close).close();
       if (await W.handle(btn)) return;
+      if(btn.dataset.act==='clearfilter'||btn.dataset.act==='resetsearch'){const key=btn.dataset.filter;if(!key||key==='search'){search='';$('#searchInput').value='';}if(!key||key==='tag')tag='';if(!key||key==='type')type='all';if(!key||key==='extra')W.clearFilters();if(!key)view='all';displayLimit=50;await render();browse();return;}
       if (btn.dataset.act === 'undocapture' && undoCapture) { const old=undoCapture; undoCapture=null; if(old.scope!==S.scope()) return toast('账号已切换，撤销已取消'); const row=await S.get(old.id); if(!row||row.deleted||row.changeId!==old.changeId)return toast('记录已发生后续修改，保留当前记录'); if(!composer?.restoreDraft(row.payload))return toast('已有新草稿，原记录仍保留');await S.remove(old.id); toast('已撤销保存，内容已回到便签草稿'); return; }
-      if ('view' in btn.dataset) { W.close();W.clearFilters(); if(btn.dataset.view==='all'){search='';$('#searchInput').value='';const nav=document.querySelector('.sidebar>nav');if(nav)nav.scrollTop=0;window.scrollTo({top:0,behavior:scrollBehavior()});}displayLimit=3; view = btn.dataset.view; tag = ''; type = btn.dataset.collectionType || 'all'; await render(); if (btn.classList.contains('collection-card')) browse(); return; }
+      if ('view' in btn.dataset) { W.close();W.clearFilters(); if(btn.dataset.view==='all'){search='';$('#searchInput').value='';const nav=document.querySelector('.sidebar>nav');if(nav)nav.scrollTop=0;window.scrollTo({top:0,behavior:scrollBehavior()});}displayLimit=3; view = btn.dataset.view; tag = ''; type = btn.dataset.collectionType || 'all'; await render(); browse(); return; }
       if ('type' in btn.dataset) { W.close(); type = btn.dataset.type; await render(); if (btn.classList.contains('feature') || btn.classList.contains('nav-item')) browse(); return; }
       if ('tag' in btn.dataset) { W.close(); tag = btn.dataset.tag; await render(); return; }
       if (btn.dataset.export) return await exportView(btn.dataset.export);
@@ -156,7 +184,7 @@
       if (action === 'delete' && confirm('删除这条记录？连接云端后，删除也会同步到其他设备。建议先导出备份。')) { await S.remove(row.id); toast('已删除'); }
     } catch (error) { toast(error.message || String(error)); }
   });
-  $('#searchInput').addEventListener('input', e => { search = e.target.value.trim(); displayLimit=50; queueRender(); });
+  $('#searchInput').addEventListener('input', e => { search = e.target.value.trim(); displayLimit=50; browse();queueRender(); });
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('#searchInput').focus(); }
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !e.defaultPrevented && !document.querySelector('dialog[open]')) { e.preventDefault(); openCapture(); }
@@ -178,14 +206,14 @@
   window.addEventListener('whalex-change', queueRender);
   window.addEventListener('whalex-sync', e => { const s = e.detail, chip = $('#syncStatus'); chip.dataset.mode = s.mode; chip.querySelector('span:last-child').textContent = s.message; chip.title = s.message + (s.lastSync ? '\n上次同步：' + new Date(s.lastSync).toLocaleString('zh-CN') : ''); });
   window.addEventListener('whalex-account', async () => {
-    try { W.reset(); undoCapture=null; view='all';type='all';tag='';search='';$('#searchInput').value='';pip?.close(); editor?.dispose(); $('#editorDialog').close(); composer?.dispose(); await S.defaults(); composer = await window.WhaleXComposer.mount($('#inlineComposer'),{onSaved:captureSaved,onClose:closeCapture}); updateAccountUI(); await render(); } catch(e) { toast(e.message); }
+    try { W.reset(); undoCapture=null; view='all';type='all';tag='';search='';$('#searchInput').value='';pip?.close(); editor?.dispose(); $('#editorDialog').close(); composer?.dispose(); await S.defaults(); composer = await window.WhaleXComposer.mount($('#inlineComposer'),{onSaved:captureSaved,onClose:closeCapture,onFloat:float}); updateAccountUI(); await render(); } catch(e) { toast(e.message); }
   });
-  window.addEventListener('focus', queueRender);
-  const bridge={refresh:queueRender,toast,settings,editor:openEditor,float,download,selection:()=>({view,type,tag,search}),select:async options=>{view=options.view??view;type=options.type??type;tag=options.tag??tag;search=options.search??search;$('#searchInput').value=search;displayLimit=view==='review'?10:3;await render();}};
+  window.addEventListener('focus',()=>{queueRender();updateFloatLabel();});
+  const bridge={refresh:queueRender,toast,settings,editor:openEditor,float,download,selection:()=>({view,type,tag,search}),select:async options=>{view=options.view??view;type=options.type??type;tag=options.tag??tag;search=options.search??search;$('#searchInput').value=search;displayLimit=view==='review'?10:3;await render();browse();}};
   window.WhaleXApp=bridge; W.init(bridge);
   (async () => {
-    renderIcons(); const warning = await S.ready;
+    renderIcons();updateFloatLabel(); const warning = await S.ready;
     if (warning) { $('#migrationNotice').hidden = false; $('#migrationNotice').textContent = warning; }
-    composer = await window.WhaleXComposer.mount($('#inlineComposer'),{onSaved:captureSaved,onClose:closeCapture}); await render(); C.start();
+    composer = await window.WhaleXComposer.mount($('#inlineComposer'),{onSaved:captureSaved,onClose:closeCapture,onFloat:float}); await render(); C.start();
   })().catch(e => toast('启动失败：' + e.message));
 })();
