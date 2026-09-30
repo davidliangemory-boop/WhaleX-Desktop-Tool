@@ -147,6 +147,7 @@ with sync_playwright() as p:
         for i in range(1105):
             record=copy.deepcopy(template); record['id']=f'bulk-{i:04d}'; cloud['user-a'][record['id']]=record
         device.evaluate('() => WhaleXSync.syncNow()')
+        device.wait_for_function("async () => { await WhaleXSync.syncNow(); return (await WhaleXStore.all()).filter(r=>r.kind==='note'&&!r.deleted).length >= 1107; }",polling=200,timeout=20000)
         check('pull pagination exceeds 1000 records',len(notes(device))>=1107)
         page.evaluate('() => WhaleXSync.logout()'); page.wait_for_timeout(300)
         check('logout preserves offline workspace',len(notes(page))==3)

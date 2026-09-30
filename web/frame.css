@@ -91,7 +91,9 @@
 .workbench .utility-body .scene-status i{display:none}
 .workbench .utility-body .bottom-note .text-button{color:var(--secondary)}
 .workbench .utility-float{color:var(--secondary);background:#1a2538;border:1px solid var(--edge);padding:9px;border-radius:7px}
-.workbench .modal{background:var(--surface);color:var(--ink);border:1px solid var(--edge);box-shadow:0 12px 35px #0005}
+.workbench .modal{position:fixed;inset:var(--drawer-top) auto calc(max(var(--dock-height),180px) + 12px) var(--drawer-left);margin:0;width:var(--drawer-width);max-width:none;max-height:calc(100dvh - var(--drawer-top) - max(var(--dock-height),180px) - 12px);padding:20px;background:var(--surface);color:var(--ink);border:1px solid var(--edge);border-radius:10px;box-shadow:none;overflow:auto}
+.workbench .editor-dialog{padding:0}
+.workbench .modal .form-columns{grid-template-columns:1fr}
 .workbench .modal::backdrop{background:transparent;backdrop-filter:none}
 .workbench .modal p,.workbench .modal label{color:var(--secondary)}
 .workbench .toast{background:#172237;border:1px solid #3b4961;box-shadow:none;transform:translate(-50%,8px);transition:opacity 160ms ease,transform 160ms ease}
@@ -120,6 +122,7 @@
   .record-trigger{right:14px;bottom:calc(max(var(--dock-height),180px) + 12px);min-height:40px;padding:8px 20px}
   .workbench #inlineComposer,.workbench-tools[open]>.utility-body{top:var(--drawer-top);bottom:0;border-radius:12px 12px 0 0;transform:translateY(8px);z-index:20}
   .workbench #inlineComposer.is-open{transform:translateY(0)}
+  .workbench .modal{bottom:0;max-height:calc(100dvh - var(--drawer-top));border-radius:12px 12px 0 0}
   .workbench .sticky-paper .paper-content{min-height:105px}
   .workbench-tools[open]>.utility-body{animation:frame-rise 160ms ease;transform:none}
   @keyframes frame-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
