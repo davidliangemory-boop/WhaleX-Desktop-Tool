@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>WhaleX · 提示词与灵感工作台</title>
-<link rel="icon" href="./assets/whale.svg" type="image/svg+xml"><link rel="stylesheet" href="./styles.css">
+<link rel="icon" href="./assets/whale.svg" type="image/svg+xml"><link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./scene.css">
 </head>
 <body>
 <div class="app-shell">
@@ -38,7 +38,7 @@
    </div>
    <aside class="right-column"><div id="inlineComposer"></div><section class="today-panel glass"><header class="today-header"><div><h3>今天的小进展</h3><p id="todayDate"></p></div><strong id="todayCount">0</strong></header><div id="todayTasks"></div></section><section class="quote-card"><p>Keep good<br>ideas alive.</p><small>更好的想法，从记录开始。 — WhaleX</small></section></aside>
   </div>
-  <footer class="bottom-note">WhaleX 0.2 · 本机优先 · 未连接云端时不会跨设备同步<br>网页悬浮窗依赖浏览器画中画；原生置顶与全局快捷键请使用桌面版。</footer>
+  <footer class="bottom-note">WhaleX · Observatory 动态主题 · 本机优先<br>未连接云端时不会跨设备同步；网页浮窗依赖浏览器画中画。</footer>
  </main>
 </div>
 <dialog id="editorDialog" class="modal editor-dialog" aria-label="编辑提示词"><div id="editorRoot"></div></dialog>
@@ -56,5 +56,5 @@
 <dialog id="libraryDialog" class="modal" aria-labelledby="libraryTitle"><header><h2 id="libraryTitle">新建资料库</h2><button data-close="libraryDialog" aria-label="关闭">×</button></header><form id="libraryForm"><label for="libraryName">资料库名称</label><input id="libraryName" maxlength="60" placeholder="例如：合同审核 / 写作 / 产品" required><div class="buttons"><button class="primary" type="submit">创建资料库</button></div></form></dialog>
 <dialog id="exportDialog" class="modal" aria-labelledby="exportTitle"><header><h2 id="exportTitle">导出当前视图</h2><button data-close="exportDialog" aria-label="关闭">×</button></header><p>只导出当前筛选下的记录。完整备份请在设置中操作。</p><div class="buttons"><button class="ghost" data-export="md">Markdown</button><button class="ghost" data-export="txt">TXT</button><button class="ghost" data-export="json">JSON</button><button class="ghost" data-export="html">Word 兼容 HTML</button></div><p class="code-note">HTML 可用 Word 打开；此格式不是原生 .docx。</p></dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="./logic.js"></script><script src="./store.js"></script><script src="./sync.js"></script><script src="./composer.js"></script><script src="./app.js"></script>
+<script src="./scene.js"></script><script src="./logic.js"></script><script src="./store.js"></script><script src="./sync.js"></script><script src="./composer.js"></script><script src="./app.js"></script>
 </body></html>

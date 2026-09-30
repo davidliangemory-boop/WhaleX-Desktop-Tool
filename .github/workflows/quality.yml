@@ -14,18 +14,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm run check && npm test
+      - run: npm run check && npm test && node --check web/scene.js
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install playwright==1.57.0
       - run: python -m playwright install --with-deps chromium
       - run: python tests/browser_smoke.py
+      - run: python tests/scene_browser.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: WhaleX-browser-previews
           path: tests/*-preview.png
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: WhaleX-motion-review
+          path: |
+            tests/motion-review/
+            web/
+            docs/MOTION_DESIGN.md
           if-no-files-found: ignore
   database:
     runs-on: ubuntu-latest
