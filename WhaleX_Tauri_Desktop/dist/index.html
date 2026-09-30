@@ -1,0 +1,70 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WhaleX</title><link rel="stylesheet" href="app.css"></head><body>
+<div class="ambient"><div class="mesh"></div><div class="aurora a1"></div><div class="aurora a2"></div><div class="stars"></div></div>
+<div class="app-shell">
+  <aside class="rail">
+    <div class="logo"><div class="logo-mark">W</div><div><b>WhaleX</b><small>IDEA COMMAND OS</small></div></div>
+    <button class="capture-primary" id="captureBtn"><span>✦ 快速记录</span><kbd>Ctrl ⇧ Space</kbd></button>
+    <div class="rail-section"><label>SMART</label>
+      <button class="rail-item active" data-view="all"><span>⌂ 收集箱</span><i id="countAll">0</i></button>
+      <button class="rail-item" data-view="today"><span>◷ 今天</span><i id="countToday">0</i></button>
+      <button class="rail-item" data-view="favorites"><span>☆ 收藏</span><i id="countFav">0</i></button>
+      <button class="rail-item" data-view="archive"><span>⌁ 归档</span><i id="countArchive">0</i></button>
+    </div>
+    <div class="rail-section"><label>LIBRARIES</label><div id="libraryNav"></div></div>
+    <div class="rail-section"><label>TAGS</label><div id="tagNav"></div></div>
+    <div class="rail-footer"><span class="status-dot"></span>Local-first · SQLite</div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div class="mode-tabs"><button class="active">工作台</button><button id="stickyHubBtn">桌面便签</button></div>
+      <div class="top-search"><span>⌕</span><input id="search" placeholder="搜索你的想法、Prompt、标签…"><kbd>⌘ K</kbd></div>
+      <select id="lang"><option value="zh">中文</option><option value="en">English</option></select>
+      <button class="ghost" id="exportBtn">⇩ 导出</button>
+      <button class="avatar">WX</button>
+    </header>
+
+    <section class="command-stage">
+      <svg class="connectors" viewBox="0 0 1200 620" preserveAspectRatio="none" aria-hidden="true">
+        <defs><linearGradient id="wire" x1="0" x2="1"><stop stop-color="#45e6ff" stop-opacity="0"/><stop offset=".5" stop-color="#75a4ff" stop-opacity=".85"/><stop offset="1" stop-color="#9c6fff" stop-opacity="0"/></linearGradient></defs>
+        <path d="M405 165 C510 165 500 255 590 275"/><path d="M405 310 C500 310 500 290 590 285"/><path d="M430 455 C510 430 520 335 590 300"/>
+        <path d="M785 160 C705 170 710 250 640 275"/><path d="M800 310 C730 310 715 292 645 288"/><path d="M770 458 C710 430 700 335 642 304"/>
+      </svg>
+      <div class="signal s1"></div><div class="signal s2"></div><div class="signal s3"></div><div class="signal s4"></div>
+
+      <div class="stage-copy"><span>WHALEX · YOUR AI CO-PILOT</span><h1 id="stageTitle">让想法自己流动起来。</h1><p id="stageSub">捕捉 · 连接 · 整理 · 复用。不是另一套死板笔记，而是你的个人 Prompt / Idea 中枢。</p></div>
+
+      <button class="node n-capture" data-action="capture"><i>✎</i><b>快速记录</b><span>想到就记，2 秒入库</span><em>→</em></button>
+      <button class="node n-library" data-action="library"><i>▤</i><b>资料库</b><span>自动回归正确的库</span><em>→</em></button>
+      <button class="node n-tags" data-action="tags"><i>◆</i><b>标签</b><span>跨库建立智能关联</span><em>→</em></button>
+      <button class="node n-ai" data-action="ai"><i>✦</i><b>智能建议</b><span>标题 · 标签 · 归档建议</span><em>→</em></button>
+      <button class="node n-workflow" data-action="workflow"><i>⌘</i><b>工作流</b><span>把 Prompt 连接成流程</span><em>→</em></button>
+      <button class="node n-export" data-action="export"><i>⇧</i><b>导出</b><span>按库 / 日期批量输出</span><em>→</em></button>
+
+      <div class="core">
+        <div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div>
+        <div class="core-glow"></div><div class="whale-mark">W</div>
+        <div class="core-label"><b>WhaleX</b><span>IDEA FLOW ENGINE</span></div>
+      </div>
+
+      <div class="smart-input"><span class="spark">✦</span><input id="inlineCapture" placeholder="记录一个想法，或输入 / 打开命令…"><button id="inlineSave">→</button><div class="quick-chips"><button>✎ Prompt</button><button>✦ Idea</button><button>⌘ Workflow</button><button>▣ Sticky</button></div></div>
+
+      <div class="sticky-preview" id="stickyPreview"><div class="sticky-pin">● ALWAYS ON TOP</div><b>桌面便签</b><p>最重要的想法，悬浮在所有程序之上。</p><button id="newStickyBtn">＋ 新建置顶便签</button></div>
+      <div class="today-card"><div class="today-head"><span>▣ TODAY</span><b id="todayProgress">0/0</b></div><div id="todayMini"></div></div>
+    </section>
+
+    <section class="bottom-flow">
+      <div class="flow-head"><div><span id="flowEyebrow">RECENT SIGNALS</span><h2 id="flowTitle">最近捕捉</h2></div><div class="filters"><button class="active" data-type="all">All</button><button data-type="Prompt">Prompt</button><button data-type="Idea">Idea</button><button data-type="Workflow">Workflow</button></div></div>
+      <div class="note-flow" id="noteFlow"></div>
+    </section>
+  </main>
+</div>
+
+<div class="inspector" id="inspector">
+  <div class="inspector-bar"><span id="inspectorPath">LIBRARY · TYPE</span><button id="closeInspector">×</button></div>
+  <input class="inspector-title" id="editTitle">
+  <div class="meta-row"><select id="editLibrary"></select><select id="editType"><option>Prompt</option><option>Idea</option><option>Workflow</option><option>Snippet</option><option>Reference</option><option>Todo</option></select><input id="editTags" placeholder="#tags"></div>
+  <textarea id="editContent" class="inspector-content"></textarea>
+  <div class="inspector-actions"><button id="favoriteBtn">☆ 收藏</button><button id="archiveBtn">归档</button><button class="primary" id="pinBtn">固定为置顶便签</button></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="db.js"></script><script src="app.js"></script></body></html>
