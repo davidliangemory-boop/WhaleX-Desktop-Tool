@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>WhaleX Web</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+  <div class="grid-noise"></div>
+
+  <div class="app-shell">
+    <aside class="sidebar glass">
+      <div class="brand">
+        <div class="brand-mark"><span>W</span><i></i></div>
+        <div>
+          <strong>WhaleX</strong>
+          <small>IDEA COMMAND CENTER</small>
+        </div>
+      </div>
+
+      <button class="capture-main" id="captureBtn">
+        <span>＋ 快速记录</span><kbd>Ctrl ⇧ Space</kbd>
+      </button>
+
+      <div class="nav-section">
+        <div class="nav-label">智能清单</div>
+        <button class="nav-item active" data-view="all"><span>⌂</span><b>收集箱</b><em id="countAll">0</em></button>
+        <button class="nav-item" data-view="today"><span>◷</span><b>今天</b><em id="countToday">0</em></button>
+        <button class="nav-item" data-view="pinned"><span>⌃</span><b>置顶便签</b><em id="countPinned">0</em></button>
+        <button class="nav-item" data-view="favorites"><span>☆</span><b>收藏</b><em id="countFav">0</em></button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">资料库</div>
+        <div id="libraryNav"></div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">标签</div>
+        <div id="tagNav"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="ghost" id="exportMenuBtn">⇩ 导出</button>
+        <button class="ghost" id="languageBtn">中 / EN</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="search-wrap">
+          <span>⌕</span>
+          <input id="searchInput" placeholder="搜索 Prompt、Idea、标签、资料库…" />
+          <kbd>⌘ K</kbd>
+        </div>
+        <div class="top-actions">
+          <div class="status-chip"><i></i><span>Local-first</span></div>
+          <button class="icon-button" id="floatingDeskBtn" title="打开置顶浮窗">⌃</button>
+          <button class="avatar">DX</button>
+        </div>
+      </header>
+
+      <section class="command-zone">
+        <div class="command-copy">
+          <div class="eyebrow">WHALEX INTELLIGENCE LAYER</div>
+          <h1>把灵感变成<br/><span>可调用的资产。</span></h1>
+          <p>捕捉 Prompt、Idea 与 Workflow。WhaleX 会按日期、资料库和标签自动组织，并把你需要盯着看的内容送进始终置顶的浮动桌面。</p>
+          <div class="command-actions">
+            <button class="primary" id="heroCapture">记录一个想法</button>
+            <button class="secondary" id="heroFloat">打开浮动桌面</button>
+          </div>
+        </div>
+
+        <div class="intelligence-map" aria-hidden="true">
+          <svg class="links" viewBox="0 0 760 430" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="beam" x1="0" x2="1">
+                <stop offset="0" stop-color="#54e9ff" stop-opacity=".05"/>
+                <stop offset=".5" stop-color="#77a8ff" stop-opacity=".8"/>
+                <stop offset="1" stop-color="#9a71ff" stop-opacity=".06"/>
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="4" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <path class="beam b1" d="M380 215 C270 165, 195 96, 96 80"/>
+            <path class="beam b2" d="M380 215 C260 245, 170 300, 80 334"/>
+            <path class="beam b3" d="M380 215 C500 140, 575 100, 682 92"/>
+            <path class="beam b4" d="M380 215 C510 255, 590 310, 690 342"/>
+            <path class="beam b5" d="M380 215 C390 120, 398 66, 405 25"/>
+            <circle cx="380" cy="215" r="7" fill="#bfeeff" filter="url(#glow)"/>
+          </svg>
+
+          <div class="core-orb">
+            <div class="orb-ring r1"></div>
+            <div class="orb-ring r2"></div>
+            <div class="orb-ring r3"></div>
+            <div class="orb-glow"></div>
+            <div class="orb-center">
+              <strong>WhaleX</strong>
+              <small>SMART ROUTER</small>
+            </div>
+          </div>
+
+          <div class="node node-a"><i>⌘</i><span>Quick Capture</span><small>低摩擦收集</small></div>
+          <div class="node node-b"><i>▦</i><span>Libraries</span><small>智能归库</small></div>
+          <div class="node node-c"><i>⌃</i><span>Floating Desk</span><small>始终置顶</small></div>
+          <div class="node node-d"><i>✦</i><span>Prompt Vault</span><small>可复用资产</small></div>
+          <div class="node node-e"><i>⌕</i><span>Recall</span><small>全文检索</small></div>
+
+          <div class="signal s1"></div><div class="signal s2"></div><div class="signal s3"></div>
+        </div>
+      </section>
+
+      <section class="workbench">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow" id="viewEyebrow">SMART FEED</div>
+            <h2 id="viewTitle">动态工作台</h2>
+          </div>
+          <div class="filters">
+            <button class="filter active" data-type="all">全部</button>
+            <button class="filter" data-type="Prompt">Prompt</button>
+            <button class="filter" data-type="Idea">Idea</button>
+            <button class="filter" data-type="Workflow">Workflow</button>
+          </div>
+        </div>
+
+        <div class="smart-strip">
+          <div class="smart-card featured">
+            <div><span>智能归库</span><strong id="smartRouteLabel">等待下一条记录</strong></div>
+            <i>↗</i>
+          </div>
+          <div class="smart-card">
+            <span>今日捕捉</span><strong id="todayStat">0</strong><small>条</small>
+          </div>
+          <div class="smart-card">
+            <span>浮动桌面</span><strong id="pinStat">0</strong><small>条置顶</small>
+          </div>
+          <div class="smart-card">
+            <span>资料库</span><strong id="libStat">0</strong><small>个库</small>
+          </div>
+        </div>
+
+        <div class="note-flow" id="noteFlow"></div>
+      </section>
+    </main>
+  </div>
+
+  <button class="quick-orb" id="quickOrb" title="快速记录">＋</button>
+
+  <div class="modal-backdrop" id="captureModal">
+    <div class="capture-modal glass">
+      <div class="capture-head">
+        <div>
+          <div class="eyebrow">QUICK CAPTURE</div>
+          <h3>把它先记下来。</h3>
+        </div>
+        <button class="icon-button" id="closeCapture">×</button>
+      </div>
+      <input id="captureTitle" class="capture-title" placeholder="标题（可留空，自动取正文第一行）"/>
+      <textarea id="captureContent" placeholder="输入 Prompt、Idea、Workflow 或任何值得留下的内容…"></textarea>
+      <div class="capture-meta">
+        <select id="captureType"><option>Prompt</option><option>Idea</option><option>Workflow</option><option>Snippet</option><option>Reference</option></select>
+        <select id="captureLibrary"></select>
+        <input id="captureTags" placeholder="#标签，可空格分隔"/>
+        <label class="switch"><input type="checkbox" id="capturePinned"/><span></span>置顶浮窗</label>
+      </div>
+      <div class="route-hint" id="routeHint">WhaleX 会根据内容给出归库建议。</div>
+      <div class="capture-actions">
+        <span>数据只保存在当前浏览器。</span>
+        <button class="primary" id="saveCapture">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer" id="noteDrawer">
+    <div class="drawer-head">
+      <div>
+        <div class="eyebrow" id="drawerPath">LIBRARY</div>
+        <input id="drawerTitle" />
+      </div>
+      <button class="icon-button" id="closeDrawer">×</button>
+    </div>
+    <div class="drawer-meta">
+      <select id="drawerType"></select>
+      <select id="drawerLibrary"></select>
+      <input id="drawerTags" placeholder="#tags"/>
+    </div>
+    <textarea id="drawerContent"></textarea>
+    <div class="drawer-actions">
+      <button class="ghost" id="drawerFavorite">☆ 收藏</button>
+      <button class="ghost" id="drawerPin">⌃ 置顶</button>
+      <button class="ghost danger" id="drawerDelete">删除</button>
+      <button class="primary" id="drawerSave">保存修改</button>
+    </div>
+  </div>
+
+  <div class="popover glass" id="exportPopover">
+    <strong>导出当前视图</strong>
+    <button data-export="txt">TXT</button>
+    <button data-export="md">Markdown</button>
+    <button data-export="json">JSON</button>
+    <button data-export="doc">Word (.doc)</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
