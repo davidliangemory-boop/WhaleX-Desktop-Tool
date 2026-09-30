@@ -4,7 +4,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
 };
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 fn focus_window(app: &AppHandle, label: &str) -> Result<(), String> {
     if let Some(window) = app.get_webview_window(label) {
@@ -129,8 +129,8 @@ pub fn run() {
                 );
                 app.handle().plugin(
                     tauri_plugin_global_shortcut::Builder::new()
-                        .with_handler(move |app_handle, shortcut| {
-                            if shortcut == &handler_shortcut {
+                        .with_handler(move |app_handle, shortcut, event| {
+                            if shortcut == &handler_shortcut && event.state() == ShortcutState::Pressed {
                                 let _ = show_capture_impl(app_handle);
                             }
                         })
@@ -152,7 +152,7 @@ pub fn run() {
                 .icon(app.default_window_icon().unwrap().clone())
                 .tooltip("WhaleX")
                 .menu(&menu)
-                .menu_on_left_click(false)
+                .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => { let _ = focus_window(app, "main"); }
                     "capture" => { let _ = show_capture_impl(app); }
