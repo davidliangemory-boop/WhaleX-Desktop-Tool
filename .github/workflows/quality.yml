@@ -23,6 +23,7 @@ jobs:
       - run: python tests/browser_smoke.py
       - run: python tests/scene_browser.py
       - run: python tests/scene_lock_browser.py
+      - run: python tests/scene_hd_browser.py
       - run: python tests/workspace_browser.py
       - run: python tests/visual_browser.py
       - uses: actions/upload-artifact@v4

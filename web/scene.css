@@ -5,12 +5,13 @@
 }
 .cosmic-scene::before {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(0deg, #02071688 0%, transparent 65%),
-    url("./assets/cosmic-landscape.webp") center top / cover no-repeat;
-  opacity: .93;
+  background: url("./assets/cosmic-landscape.webp") center top / cover no-repeat;
+  opacity: 1;
 }
-.cosmic-canvas, .cosmic-vignette { position: absolute; inset: 0; width: 100%; height: 100%; }
-.cosmic-vignette { background: linear-gradient(90deg, #03081855, transparent 27%, transparent 77%, #02061544); }
+.cosmic-surface, .cosmic-canvas, .cosmic-vignette { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cosmic-surface { z-index: 1; }
+.cosmic-canvas { z-index: 2; }
+.cosmic-vignette { display: none; }
 .observatory { --line: #6d9dec45; --muted: #a4b8df; }
 .observatory .app-shell { position: relative; z-index: 1; padding: 12px; gap: 12px; grid-template-columns: 222px minmax(0, 1fr); }
 .observatory .sidebar {
@@ -242,10 +243,10 @@
 .scene-status b:nth-child(3) { height: 10px; animation-delay: -.6s; }
 .scene-status b:nth-child(4) { height: 15px; animation-delay: -.9s; }
 .scene-status b:nth-child(5) { height: 5px; animation-delay: -1.2s; }
-.scene-writing .cosmic-scene { opacity: .72; }
+.scene-writing .cosmic-scene { opacity: 1; }
 .scene-writing #inlineComposer .sticky-paper { animation-play-state: paused; }
-.observatory[data-scene-mode=gentle] .cosmic-scene { opacity: .83; }
-.observatory[data-scene-mode=gentle].scene-writing .cosmic-scene { opacity: .66; }
+.observatory[data-scene-mode=gentle] .cosmic-scene { opacity: 1; }
+.observatory[data-scene-mode=gentle].scene-writing .cosmic-scene { opacity: 1; }
 .observatory[data-scene-mode=still] .paper-save::after,
 .observatory[data-scene-paused=true] .paper-save::after,
 .observatory[data-scene-mode=still] .scene-status b,

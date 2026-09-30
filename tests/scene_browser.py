@@ -128,7 +128,7 @@ try:
         page.locator('body').click(position={'x':1000,'y':15})
         page.evaluate('window.scrollTo(0,0)')
         page.wait_for_timeout(600)
-        check('DPR is capped', page.evaluate('WhaleXScene.inspect().dpr') <= 1.5)
+        check('HD sky DPR is capped', page.evaluate('WhaleXScene.inspect().dpr') <= 2)
         page.screenshot(path=str(OUT/'desktop-preview.png'), full_page=True)
         page.locator('.hero').screenshot(path=str(OUT/'hero-preview.png'))
         page.locator('#recordTrigger').click()

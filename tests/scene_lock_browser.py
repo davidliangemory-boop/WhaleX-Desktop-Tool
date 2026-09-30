@@ -1,4 +1,4 @@
-"""Guard approved scene geometry, background pixels and the Retina whale renderer."""
+"""Guard approved HD scene geometry, rendering files and pixel budgets."""
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -70,7 +70,7 @@ try:
             }''')
             assert metrics['scene']['whaleDpr']==scale, metrics
             assert metrics['whale']==[362*scale,310*scale], metrics
-            assert metrics['sky']==[390,844], metrics
+            assert metrics['sky']==[390*min(scale,2),844*min(scale,2)], metrics
             assert current['hero']==manifest['geometry']['390x844']['hero']
             if refurl:
                 oldpage=retina.new_page();old=scene(oldpage,refurl,390,844)
@@ -90,7 +90,7 @@ try:
             mobile.emulate_media(reduced_motion='reduce')
             mobile.wait_for_function("() => WhaleXScene.inspect().effective==='still' && !WhaleXScene.inspect().running")
             assert not errors,errors
-            print(f'PASS: mobile DPR {scale}, original background resolution, motion, landscape pixel budget and reduced-motion',flush=True)
+            print(f'PASS: mobile DPR {scale}, HD background resolution, motion, landscape pixel budget and reduced-motion',flush=True)
             retina.close()
         if os.environ.get('WHALEX_RECORD_SCENE'):
             manifest['geometry']=baseline

@@ -11,12 +11,13 @@
     "scope": "User-approved Retina whale rendering only; original assets, coordinates, sky, motion and orbit formulas are unchanged."
   },
   "sha256": {
-    "web/scene.js": "aeb53b0b845a66a8f086cb77d25a309b9bb051d0b76e0bfed4d0fe566a62cf34",
-    "web/scene.css": "81848dec552792b7ecab602d18088f8d94f2ee3b6e799319d1bd809ff954ab28",
+    "web/scene.js": "87d2fc941a6710311e47dd29a937b36fb58570cf8941ba00f36b95565f372dc8",
+    "web/scene.css": "3727b42925ef679e6d28fdcd1011786cfe4825a7bd73a918fdc79814e5e25f80",
     "web/styles.css": "882c5faa81aaf2002b79026fefb63dd82ebb947651af4786933255af5b4ac20e",
     "web/assets/brand-mark.svg": "fdf70edf197d558dc7f6488a9b1b6829b322670c95e40029d4b83ed19aaa44cb",
     "web/assets/cosmic-landscape.webp": "7e831316cd5f3f4e979c18c5a3f17d49b6aba86fe805c540d1cbaad7c3da0d8b",
-    "web/assets/whale-luminous.webp": "61bbd715ce412501e589ffde0fd2fa68350c38b16461014790d53d96a1900145"
+    "web/assets/whale-luminous.webp": "61bbd715ce412501e589ffde0fd2fa68350c38b16461014790d53d96a1900145",
+    "web/scene-renderer.js": "245f1ef4fc625af7f622e054967e6f02b1473362ad14da968b5fefcbf4c7c9f2"
   },
   "heroSha256": "aa2451250d920ae4c2ea9b6640c5a5d02a1747a8afba05d97f141a8826da3c2a",
   "geometry": {
@@ -104,5 +105,10 @@
         310
       ]
     }
+  },
+  "approvedSceneUpgrade": {
+    "date": "2026-10-01",
+    "previousCommit": "067d85708657196029803aace6494bf1fd550e85",
+    "scope": "User explicitly authorized beautifying the background, whale, planets, orbits, stars and all three motion modes, then requested greater starfield and planetary flow. Preserve original texture assets, hero bounds, workbench layout, capture and shortcuts. New WebGL direct sampling, spherical surface flow, cloud light, layered stars and HD pixel budgets replace the previous rendering baseline."
   }
 }
