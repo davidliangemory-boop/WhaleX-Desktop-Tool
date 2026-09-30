@@ -34,14 +34,37 @@
   async function transact(storeName, fn, mode = 'readwrite') {
     const db = await open(), tx = db.transaction(storeName, mode);
     const done = new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = tx.onabort = () => reject(tx.error || new Error('本机保存失败')); });
-    try { const result = await fn(tx.objectStore(storeName)); await done; return result; }
+    try { const result = await fn(...(Array.isArray(storeName) ? storeName : [storeName]).map(name => tx.objectStore(name))); await done; return result; }
     catch (error) { try { tx.abort(); } catch {} await done.catch(() => {}); throw error; }
   }
   async function all(s = scope()) { return transact('records', st => req(st.index('scope').getAll(s)), 'readonly'); }
   async function get(id, s = scope()) { return transact('records', st => req(st.get([s, id])), 'readonly'); }
+  const metaKey = (name, s) => 'workspace:' + s + ':' + name;
+  async function metadata(name, value, s = scope()) {
+    if (value === undefined) return transact('meta', async st => (await req(st.get(metaKey(name,s))))?.value, 'readonly');
+    const result=await transact('meta', async st => {
+      const key=metaKey(name,s), old=await req(st.get(key)), next=typeof value==='function'?value(old?.value):value;
+      await req(st.put({key,value:next}));return next;
+    });
+    notify('preferences'); return result;
+  }
+  const historyKey = row => metaKey('history:' + row.id, row.scope);
+  const edition = p => JSON.stringify([p.title,p.content,p.tags,p.libraryId,p.type,p.references]);
+  async function remember(meta, old, next) {
+    if (old?.kind !== 'note' || !next || edition(old.payload) === edition(next.payload)) return;
+    const key=historyKey(old), versions=(await req(meta.get(key)))?.value || [];
+    if (!versions.some(v=>v.id===old.changeId)) versions.unshift({ id:old.changeId, at:old.payload.updated, payload:old.payload, good:false });
+    await req(meta.put({ key, value:versions.slice(0,20) }));
+  }
+  const history = id => metadata('history:' + id).then(v=>v || []);
+  async function markVersion(id, version, good) {
+    const s=scope(), key=metaKey('history:'+id,s);
+    await transact('meta', async st => { const old=await req(st.get(key)); if (!old) return; await req(st.put({ ...old, value:old.value.map(v=>v.id===version ? {...v,good} : v) })); });
+    notify('history');
+  }
   async function put(kind, payload, options = {}) {
     const s = options.scope || scope(), id = options.id || L.uuid();
-    const result = await transact('records', async st => {
+    const result = await transact(['records','meta'], async (st, meta) => {
       const old = await req(st.get([s, id]));
       let finalId = id, base = old?.base ?? null;
       let p = L.normalize(kind, payload);
@@ -51,15 +74,18 @@
         p = { ...p, title: p.title.slice(0, 140) + '（本机冲突副本）', tags: L.tags([...p.tags, '编辑冲突']) };
       }
       const row = { scope: s, id: finalId, kind, payload: p, deleted: !!options.deleted, base, dirty: true, changeId: L.uuid() };
+      if (finalId === id) await remember(meta, old, row);
       await req(st.put(row)); return row;
     });
     notify(); return result;
   }
   async function patch(id, changes) {
     const s = scope();
-    const result = await transact('records', async st => {
-      const old = await req(st.get([s, id])); if (!old) throw new Error('找不到这条记录');
-      const row = { ...old, payload: L.normalize(old.kind, { ...old.payload, ...changes, updated: new Date().toISOString() }), dirty: true, changeId: L.uuid() };
+    const result = await transact(['records','meta'], async (st, meta) => {
+      const old = await req(st.get([s, id])); if (!old || old.deleted) throw new Error('记录已不存在，请刷新后重试');
+      const delta = typeof changes === 'function' ? changes(old.payload) : changes;
+      const row = { ...old, payload: L.normalize(old.kind, { ...old.payload, ...delta, updated: new Date().toISOString() }), dirty: true, changeId: L.uuid() };
+      await remember(meta, old, row);
       await req(st.put(row)); return row;
     }); notify(); return result;
   }
@@ -69,17 +95,17 @@
   }
   async function acknowledge(sent, response) {
     let conflict = false;
-    await transact('records', async st => {
+    await transact(['records','meta'], async (st, meta) => {
       const cur = await req(st.get([sent.scope, sent.id]));
       const rows = L.reconcile(cur, sent, response); conflict = rows.length > 1;
-      for (const row of rows) await req(st.put(row));
+      for (const row of rows) { if (row.id === cur?.id) await remember(meta, cur, row); await req(st.put(row)); }
     }); notify('remote'); return conflict;
   }
   async function receive(rows, s) {
-    await transact('records', async st => {
+    await transact(['records','meta'], async (st, meta) => {
       for (const raw of rows) {
         const remote = L.remoteRecord(raw, s), local = await req(st.get([s, remote.id]));
-        if (!local || (!local.dirty && (local.base || 0) < remote.base)) await req(st.put(remote));
+        if (!local || (!local.dirty && (local.base || 0) < remote.base)) { await remember(meta, local, remote); await req(st.put(remote)); }
       }
     }); notify('remote');
   }
@@ -137,6 +163,8 @@
       if (!row) { row = await put('library', lib.payload); existing.push(row); }
       mapping.set(lib.old, row.id);
     }
+    const newIds=rawNotes.map(()=>L.uuid()), noteIds=new Map();
+    rawNotes.forEach((n,i)=>{if(n.id&&!noteIds.has(n.id))noteIds.set(n.id,newIds[i]);});
     for (let i = 0; i < notes.length; i++) {
       const note = notes[i];
       if (isLegacy && rawNotes[i].library) {
@@ -144,8 +172,9 @@
         let lib = existing.find(r => r.payload.name === name);
         if (!lib) { lib = await put('library', { name }); existing.push(lib); }
         note.libraryId = lib.id;
-      } else note.libraryId = mapping.get(note.libraryId) || (existing.some(r => r.id === note.libraryId) ? note.libraryId : 'lib-prompt');
-      await put('note', note); // New IDs: never replace existing user data on import.
+      } else note.libraryId = mapping.get(note.libraryId) || (note.libraryId === 'lib-inbox' || existing.some(r => r.id === note.libraryId) ? note.libraryId : 'lib-prompt');
+      if (note.references) note.references = note.references.map(id => noteIds.get(id)).filter(Boolean);
+      await put('note', note, { id:newIds[i] }); // New IDs, including reference targets.
     }
     return notes.length;
   }
@@ -153,7 +182,7 @@
     const rows = (await all(s)).filter(r => !r.deleted);
     return { version: 2, exportedAt: new Date().toISOString(), libraries: rows.filter(r => r.kind === 'library').map(r => ({ id: r.id, ...r.payload })), notes: rows.filter(r => r.kind === 'note').map(r => ({ id: r.id, ...r.payload })) };
   }
-  const api = { CONFIG, SESSION, config, session, scope, readJSON, notify, open, all, get, put, patch, remove, acknowledge, receive, defaults, migrate, importBackup, backup };
+  const api = { CONFIG, SESSION, config, session, scope, readJSON, notify, open, all, get, put, patch, remove, acknowledge, receive, defaults, migrate, importBackup, backup, metadata, history, markVersion };
   api.ready = (async () => { await open(); let warning = ''; try { await migrate(); } catch (e) { warning = e.message; } await defaults(); return warning; })();
   window.WhaleXStore = api;
 })();

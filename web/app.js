@@ -1,9 +1,10 @@
 (function () {
   'use strict';
-  const S = window.WhaleXStore, L = window.WhaleXLogic, C = window.WhaleXSync;
+  const S = window.WhaleXStore, L = window.WhaleXLogic, C = window.WhaleXSync, W = window.WhaleXWorkspace;
   const $ = s => document.querySelector(s);
-  let rows = [], view = 'all', type = 'all', tag = '', search = '', composer, editor, pip, floatingComposer, toastTimer, renderTimer;
+  let rows = [], view = 'all', type = 'all', tag = '', search = '', composer, editor, pip, floatingComposer, toastTimer, renderTimer, renderVersion = 0, displayLimit = 3, undoCapture;
   const icons = {
+    menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
     home: '<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>', edit: '<path d="m14 4 6 6M4 20l5-1L21 7l-5-5L4 14Z"/>',
     calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 2v6m10-6v6M3 11h18m-14 4h3m4 0h3"/>', star: '<path d="m12 2 3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/>',
     archive: '<path d="M4 8v12h16V8M9 12h6"/><rect x="2" y="3" width="20" height="5" rx="1"/>', settings: '<circle cx="12" cy="12" r="3"/><path d="m9 3 1-1h4l1 3 3 1 3 2v4l-3 2-1 3-2 3h-4l-2-3-3-1-3-2v-4l3-2 1-3Z"/>',
@@ -15,27 +16,35 @@
     note: '<path d="M14 3H5v18h14V8l-5-5Zm0 0v5h5M8 12h8m-8 4h6"/>'
   };
   function renderIcons() { document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${icons[el.dataset.icon] || icons.tag}</svg>`; }); document.querySelectorAll('.sidebar .nav-item').forEach(el => { if (!el.hasAttribute('aria-label')) el.setAttribute('aria-label', el.querySelector('span')?.textContent || el.textContent.trim()); }); }
-  function toast(text) { clearTimeout(toastTimer); $('#toast').textContent = text; $('#toast').classList.add('show'); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 4800); }
+  function toast(text, undo = false) { clearTimeout(toastTimer); $('#toast').textContent = text; if (undo) { const button = document.createElement('button'); button.dataset.act='undocapture'; button.textContent='撤销'; $('#toast').appendChild(button); } $('#toast').classList.add('show'); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), undo ? 10000 : 4800); }
+  function captureSaved(row) { undoCapture={id:row.id,changeId:row.changeId,scope:row.scope}; toast('已保存记录',true); queueRender(); }
   function today(date) { return new Date(date).toDateString() === new Date().toDateString(); }
   const scrollBehavior = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
   function browse() { $('.notes-section').scrollIntoView({ behavior: scrollBehavior(), block: 'start' }); }
   const libraries = () => rows.filter(r => r.kind === 'library' && !r.deleted);
   const notes = () => rows.filter(r => r.kind === 'note' && !r.deleted);
   function filtered() {
+    const query=L.parseQuery(search), review=W.reviewIds();
     return notes().filter(r => {
       const p = r.payload;
       if (view === 'archived' ? !p.archived : p.archived) return false;
       if (view === 'today' && !today(p.created)) return false;
+      if (view === 'review' && !review.has(r.id)) return false;
+      if (view === 'inbox' && p.libraryId !== 'lib-inbox' && p.tags.length) return false;
       if (view === 'favorites' && !p.favorite) return false;
       if (view.startsWith('lib:') && p.libraryId !== view.slice(4)) return false;
       if (type !== 'all' && p.type !== type) return false;
-      if (tag && !p.tags.includes(tag)) return false;
+      if (!L.tagMatches(p.tags,tag) || !W.matches(p)) return false;
       const libName = libraries().find(l => l.id === p.libraryId)?.payload.name || '';
-      return !search || [p.title, p.content, p.type, ...p.tags, libName].join(' ').toLowerCase().includes(search);
+      return L.queryMatches(p,query,libName);
     }).sort((a, b) => b.payload.updated.localeCompare(a.payload.updated));
   }
   async function render() {
+    const version=++renderVersion, scope=S.scope();
     rows = await S.all();
+    if(version!==renderVersion||scope!==S.scope())return;
+    await W.refresh(rows,{view,type});
+    if(version!==renderVersion||scope!==S.scope())return;
     const active = notes().filter(r => !r.payload.archived), libs = libraries();
     const counts = { all: active.length, today: active.filter(r => today(r.payload.created)).length, favorites: active.filter(r => r.payload.favorite).length };
     document.querySelectorAll('[data-count]').forEach(el => { if (el.dataset.count in counts) el.textContent = counts[el.dataset.count]; });
@@ -43,15 +52,12 @@
     $('#libraryNav').innerHTML = libs.map(l => `<button class="nav-item ${view === 'lib:' + l.id ? 'active' : ''}" data-view="lib:${L.esc(l.id)}" title="${L.esc(l.payload.name)}"><i class="library-dot dot-${l.payload.color}"></i><span>${L.esc(l.payload.name)}</span><em>${active.filter(r => r.payload.libraryId === l.id).length}</em></button>`).join('');
     document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
     document.querySelectorAll('.toolbar [data-type]').forEach(b => b.classList.toggle('active', b.dataset.type === type));
-    const names = { all: '最近记录', today: '今天的记录', favorites: '我的收藏', archived: '已归档' };
+    const names = { all: '最近记录', review:'最近记录', inbox:'待整理', today: '今天的记录', favorites: '我的收藏', archived: '已归档' };
     $('#viewTitle').textContent = names[view] || libs.find(l => view === 'lib:' + l.id)?.payload.name || '资料库';
-    const arr = filtered(); $('#viewSubtitle').textContent = `${arr.length} 条记录${tag ? ' · #' + tag : ''}${type !== 'all' ? ' · ' + type : ''}`;
-    const allTags = [...new Set(active.flatMap(r => r.payload.tags))].slice(0, 16);
+    const arr = filtered(); $('#viewSubtitle').textContent = `${arr.length} 条记录${arr.length>displayLimit?' · 显示最近 '+displayLimit+' 条':''}${tag ? ' · #' + tag : ''}${type !== 'all' ? ' · ' + type : ''}`;
+    const allTags = [];
     $('#tagFilter').innerHTML = (tag ? `<button class="filter-tag active" data-tag="">清除 #${L.esc(tag)} ×</button>` : '') + allTags.map(t => `<button class="filter-tag ${tag === t ? 'active' : ''}" data-tag="${L.esc(t)}"># ${L.esc(t)}</button>`).join('');
-    $('#noteGrid').innerHTML = arr.length ? arr.map(r => {
-      const p = r.payload, lib = libs.find(l => l.id === p.libraryId)?.payload.name || '未分类';
-      return `<article class="note-card"><div class="note-top"><span class="note-type">${L.esc(p.type)}</span><button class="mini-button favorite ${p.favorite ? 'active' : ''}" data-note-act="favorite" data-id="${L.esc(r.id)}" aria-label="${p.favorite ? '取消收藏' : '收藏'}">${p.favorite ? '★' : '☆'}</button></div><h3>${L.esc(p.title)}</h3><p>${L.esc(p.content)}</p><div class="note-tags">${p.tags.map(t => `<span>#${L.esc(t)}</span>`).join('')}</div><footer class="note-foot"><span title="${L.esc(lib)}">${L.esc(lib)} · ${new Date(p.updated).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })}</span><div class="note-actions"><button class="mini-button" data-note-act="edit" data-id="${L.esc(r.id)}">编辑</button><button class="mini-button" data-note-act="float" data-id="${L.esc(r.id)}">浮窗</button><button class="mini-button" data-note-act="copy" data-id="${L.esc(r.id)}" title="复制内容">复制</button></div></footer><div class="note-actions secondary-actions"><button class="mini-button" data-note-act="archive" data-id="${L.esc(r.id)}">${p.archived ? '移回资料库' : '归档'}</button><button class="mini-button" data-note-act="delete" data-id="${L.esc(r.id)}">删除</button></div></article>`;
-    }).join('') : `<div class="empty"><strong>${search || tag ? '暂时没有匹配的记录' : '好想法，从第一张便签开始'}</strong><p>${search || tag ? '试试其他关键词，或清除筛选。' : '在右侧输入提示词，选择资料库和标签。<br>保存后，它就会出现在这里。'}</p><button class="primary" data-act="focus">记录一个想法 ↗</button></div>`;
+    $('#noteGrid').innerHTML = arr.length ? arr.slice(0,displayLimit).map(r=>W.card(r,libs.find(l=>l.id===r.payload.libraryId)?.payload.name||'未分类')).join('') + (arr.length>displayLimit&&displayLimit>3 ? '<button class="record-more" data-act="more">再显示 50 条 · 共 '+arr.length+' 条</button>' : '') : '<div class="empty"><strong>'+(view==='review'?'今日回顾已完成或暂无旧记录':search||tag?'暂时没有匹配的记录':'好想法，从第一张便签开始')+'</strong><p>'+(view==='review'?'保存旧记录后，会按回顾设置选出每天的内容。':search||tag?'试试其他关键词，或清除筛选。':'在右侧先写下来，分类与标签可以稍后补充。')+'</p><button class="primary" data-act="'+(view==='review'?'reviewsettings':'focus')+'">'+(view==='review'?'调整回顾设置':'记录一个想法 ↗')+'</button></div>';
     $('#todayDate').textContent = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
     const allTodos = active.filter(r => r.payload.type === 'Todo'), completed = allTodos.filter(r => r.payload.done).length;
     $('#todayCount').textContent = allTodos.length ? `${completed}/${allTodos.length}` : '0';
@@ -63,6 +69,7 @@
   }
   function queueRender() { clearTimeout(renderTimer); renderTimer = setTimeout(() => void render().catch(e => toast(e.message)), 50); }
   async function openEditor(record) {
+    W.close();
     editor?.dispose(); const dialog = $('#editorDialog');
     editor = await window.WhaleXComposer.mount($('#editorRoot'), { record, onSaved: () => { dialog.close(); queueRender(); }, onClose: () => dialog.close() });
     dialog.showModal(); editor.focus();
@@ -83,7 +90,7 @@
       const request = pip && !pip.closed ? Promise.resolve(pip) : window.documentPictureInPicture.requestWindow({ width: 420, height: 600 });
       pip = await request; floatingComposer?.dispose();
       pip.document.head.innerHTML = '';
-      const link = pip.document.createElement('link'); link.rel = 'stylesheet'; link.href = new URL('./styles.css', location.href).href; pip.document.head.appendChild(link);
+      for (const path of ['./styles.css','./workspace.css']) { const link = pip.document.createElement('link'); link.rel = 'stylesheet'; link.href = new URL(path, location.href).href; pip.document.head.appendChild(link); }
       pip.document.title = 'WhaleX · 悬浮输入'; pip.document.body.className = 'capture-page'; pip.document.body.innerHTML = '<div id="captureRoot"></div>';
       const thisPip = pip;
       floatingComposer = await window.WhaleXComposer.mount(pip.document.querySelector('#captureRoot'), { record, draftSlot: 'floating', onClose: () => thisPip.close() });
@@ -93,7 +100,7 @@
   }
   function settings() {
     const c = S.config(); $('#cloudUrl').value = c?.url || ''; $('#cloudKey').value = c?.key || '';
-    updateAccountUI(); $('#settingsDialog').showModal();
+    updateAccountUI(); W.fillConnections(); if(!$('#settingsDialog').open)$('#settingsDialog').showModal();
   }
   function updateAccountUI() {
     const s = S.session(); $('#accountNotice').textContent = s ? '当前账号：' + s.user.email + '。本机离线库与此账号分开保存。' : '未登录：记录仅保存在当前设备。';
@@ -118,19 +125,21 @@
     const btn = e.target.closest('button'); if (!btn) return;
     try {
       if (btn.dataset.close) return $('#' + btn.dataset.close).close();
-      if ('view' in btn.dataset) { view = btn.dataset.view; tag = ''; type = btn.dataset.collectionType || 'all'; await render(); if (btn.classList.contains('collection-card')) browse(); return; }
-      if ('type' in btn.dataset) { type = btn.dataset.type; await render(); if (btn.classList.contains('feature') || btn.classList.contains('nav-item')) browse(); return; }
-      if ('tag' in btn.dataset) { tag = btn.dataset.tag; await render(); return; }
+      if (await W.handle(btn)) return;
+      if (btn.dataset.act === 'undocapture' && undoCapture) { const old=undoCapture; undoCapture=null; if(old.scope!==S.scope()) return toast('账号已切换，撤销已取消'); const row=await S.get(old.id); if(!row||row.deleted||row.changeId!==old.changeId)return toast('记录已发生后续修改，保留当前记录'); if(!composer?.restoreDraft(row.payload))return toast('已有新草稿，原记录仍保留');await S.remove(old.id); toast('已撤销保存，内容已回到便签草稿'); return; }
+      if ('view' in btn.dataset) { W.close();W.clearFilters(); if(btn.dataset.view==='all'){search='';$('#searchInput').value='';const nav=document.querySelector('.sidebar>nav');if(nav)nav.scrollTop=0;window.scrollTo({top:0,behavior:scrollBehavior()});}displayLimit=3; view = btn.dataset.view; tag = ''; type = btn.dataset.collectionType || 'all'; await render(); if (btn.classList.contains('collection-card')) browse(); return; }
+      if ('type' in btn.dataset) { W.close(); type = btn.dataset.type; await render(); if (btn.classList.contains('feature') || btn.classList.contains('nav-item')) browse(); return; }
+      if ('tag' in btn.dataset) { W.close(); tag = btn.dataset.tag; await render(); return; }
       if (btn.dataset.export) return await exportView(btn.dataset.export);
       const act = btn.dataset.act;
       if (act === 'libraries') { view = 'all'; type = 'all'; tag = ''; await render(); browse(); }
-      if (act === 'browse') browse();
+      if (act === 'browse' || act === 'more') { displayLimit=Math.max(50,displayLimit+50); await render(); if(act==='browse')browse(); }
       if (act === 'suggest') { composer?.focus(); composer?.suggest(); $('#inlineComposer').scrollIntoView({ behavior: scrollBehavior(), block: 'center' }); }
       if (act === 'newtask') { composer?.setType('Todo'); $('#inlineComposer').scrollIntoView({ behavior: scrollBehavior(), block: 'center' }); }
       if (act === 'capture') return await float();
       if (act === 'focus') { composer?.focus(); $('#inlineComposer').scrollIntoView({ behavior: scrollBehavior(), block: 'center' }); }
-      if (act === 'settings') settings();
-      if (act === 'export') $('#exportDialog').showModal();
+      if (act === 'settings') { W.close();settings(); }
+      if (act === 'export') { W.close();$('#exportDialog').showModal(); }
       if (act === 'newlib') { $('#libraryDialog').showModal(); $('#libraryName').focus(); }
       if (act === 'tags') { $('#tagFilter').scrollIntoView({ behavior: scrollBehavior(), block: 'center' }); if (!$('#tagFilter').children.length) toast('为记录添加标签后，即可在这里筛选'); }
       const row = rows.find(r => r.id === btn.dataset.id); if (!row) return;
@@ -144,7 +153,7 @@
       if (action === 'delete' && confirm('删除这条记录？连接云端后，删除也会同步到其他设备。建议先导出备份。')) { await S.remove(row.id); toast('已删除'); }
     } catch (error) { toast(error.message || String(error)); }
   });
-  $('#searchInput').addEventListener('input', e => { search = e.target.value.toLowerCase().trim(); queueRender(); });
+  $('#searchInput').addEventListener('input', e => { search = e.target.value.trim(); displayLimit=50; queueRender(); });
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('#searchInput').focus(); }
     if (!window.__TAURI__ && e.ctrlKey && e.shiftKey && e.code === 'Space') { e.preventDefault(); void float(); }
@@ -165,12 +174,14 @@
   window.addEventListener('whalex-change', queueRender);
   window.addEventListener('whalex-sync', e => { const s = e.detail, chip = $('#syncStatus'); chip.dataset.mode = s.mode; chip.querySelector('span:last-child').textContent = s.message; chip.title = s.message + (s.lastSync ? '\n上次同步：' + new Date(s.lastSync).toLocaleString('zh-CN') : ''); });
   window.addEventListener('whalex-account', async () => {
-    try { pip?.close(); editor?.dispose(); $('#editorDialog').close(); composer?.dispose(); await S.defaults(); composer = await window.WhaleXComposer.mount($('#inlineComposer')); updateAccountUI(); await render(); } catch(e) { toast(e.message); }
+    try { W.reset(); undoCapture=null; view='all';type='all';tag='';search='';$('#searchInput').value='';pip?.close(); editor?.dispose(); $('#editorDialog').close(); composer?.dispose(); await S.defaults(); composer = await window.WhaleXComposer.mount($('#inlineComposer'),{onSaved:captureSaved}); updateAccountUI(); await render(); } catch(e) { toast(e.message); }
   });
   window.addEventListener('focus', queueRender);
+  const bridge={refresh:queueRender,toast,settings,editor:openEditor,float,download,selection:()=>({view,type,tag,search}),select:async options=>{view=options.view??view;type=options.type??type;tag=options.tag??tag;search=options.search??search;$('#searchInput').value=search;displayLimit=view==='review'?10:3;await render();}};
+  window.WhaleXApp=bridge; W.init(bridge);
   (async () => {
     renderIcons(); const warning = await S.ready;
     if (warning) { $('#migrationNotice').hidden = false; $('#migrationNotice').textContent = warning; }
-    composer = await window.WhaleXComposer.mount($('#inlineComposer')); await render(); C.start();
+    composer = await window.WhaleXComposer.mount($('#inlineComposer'),{onSaved:captureSaved}); await render(); C.start();
   })().catch(e => toast('启动失败：' + e.message));
 })();

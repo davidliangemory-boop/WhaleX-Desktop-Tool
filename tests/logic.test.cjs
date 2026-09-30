@@ -19,3 +19,18 @@ test('edit vs delete retains local copy', () => { const r=L.reconcile(row,row,{s
 test('identical conflicts do not duplicate', () => assert.equal(L.reconcile(row,row,{status:'conflict',record:remote}).length,1));
 test('unknown result status rejected', () => assert.throws(()=>L.reconcile(row,row,{status:'ok',record:remote})));
 test('sent snapshot remains immutable', () => { const before=JSON.stringify(row); L.reconcile(row,row,{status:'conflict',record:{...remote,deleted:true}}); assert.equal(JSON.stringify(row),before); });
+test('parent tags match descendants without matching unrelated prefixes',()=>{
+  assert.equal(L.tagMatches(['工作/法务/合同'],'工作/法务'),true);
+  assert.equal(L.tagMatches(['工作/法务二'],'工作/法务'),false);
+});
+test('natural search keeps literal keywords when no time or type is requested',()=>{
+  assert.equal(L.parseQuery('独立悬浮笔记').text,'独立悬浮笔记');
+  const query=L.parseQuery('本周的合同 Prompt',new Date('2026-09-30T12:00:00Z'));
+  assert.equal(query.type,'Prompt');assert.equal(query.text,'合同');assert.ok(query.from);
+  assert.equal(L.queryMatches({...p,title:'合同',created:'2026-01-01T00:00:00.000Z'},query),false);
+});
+test('reference and annotation metadata survive normalization and sync',()=>{
+  const n=L.normalize('note',{content:'source',references:['valid-id','bad<id>','valid-id'],annotations:[{id:'c1',content:'<b>批注</b>',created:'2026-01-01'}]});
+  assert.deepEqual(n.references,['valid-id']);assert.equal(n.annotations[0].content,'<b>批注</b>');
+  assert.deepEqual(L.remoteRecord({...remote,payload:n},'account').payload,n);
+});

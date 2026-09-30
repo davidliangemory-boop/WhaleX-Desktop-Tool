@@ -22,6 +22,8 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - run: python tests/browser_smoke.py
       - run: python tests/scene_browser.py
+      - run: python tests/scene_lock_browser.py
+      - run: python tests/workspace_browser.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -61,3 +63,4 @@ jobs:
       - run: psql -v ON_ERROR_STOP=1 -f tests/postgres_bootstrap.sql
       - run: psql -v ON_ERROR_STOP=1 -f supabase/schema.sql
       - run: psql -v ON_ERROR_STOP=1 -f tests/rls.sql
+

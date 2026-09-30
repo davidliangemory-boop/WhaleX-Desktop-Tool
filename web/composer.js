@@ -8,7 +8,8 @@
     const draftKey = 'whalex_draft_v2:' + activeScope + ':' + draftSlot + ':' + (record?.id || 'new');
     const lastKey = 'whalex_last_library_v2:' + activeScope;
     const draft = S.readJSON(draftKey);
-    const initial = draft || record?.payload || { content: '', title: '', type: 'Prompt', libraryId: localStorage.getItem(lastKey) || 'lib-prompt', tags: [] };
+    const initial = draft || record?.payload || { content: '', title: '', type: 'Prompt', libraryId: localStorage.getItem(lastKey) || 'lib-inbox', tags: [] };
+    const suggestionId = 'capture-tags-' + L.uuid();
     const expected = draft?.expected || record?.changeId;
     if (draft && current && expected) current = { ...current, changeId: expected };
     chosenTags = L.tags(initial.tags);
@@ -16,16 +17,17 @@
       <header class="paper-head" data-tauri-drag-region><span class="paper-brand" data-tauri-drag-region>✦ ${record ? '编辑提示词' : '记录你的想法'}</span>
         <div class="paper-controls"><button type="button" data-action="pin" title="切换窗口置顶" aria-label="切换窗口置顶">⌃</button><button type="button" data-action="close" title="收起便签，保留草稿" aria-label="收起便签">×</button></div></header>
       <form class="capture-form">
-        <input class="paper-title" name="title" maxlength="160" placeholder="给这个想法起个名字（可留空）" aria-label="标题">
         <textarea name="content" class="paper-content" maxlength="200000" placeholder="在这里输入提示词、想法或笔记…\n\n先记下来，稍后再整理。" aria-label="提示词内容" required></textarea>
         <div class="paper-under"><span data-draft>草稿自动保留在本机</span><span data-count>0 字</span></div>
+        <details class="capture-details" ${record ? 'open' : ''}><summary>标签与归属 <small>可稍后整理</small></summary>
+        <input class="paper-title" name="title" maxlength="160" placeholder="标题（可留空）" aria-label="标题">
         <div class="field-head"><label>保存到资料库</label><button type="button" class="paper-link" data-action="newlib">＋ 新建库</button></div>
         <div class="paper-selects"><select name="libraryId" aria-label="资料库"></select><select name="type" aria-label="内容类型">${L.TYPES.map(t => `<option>${t}</option>`).join('')}</select></div>
         <div class="inline-library" hidden><input name="newlib" maxlength="60" placeholder="新资料库名称" aria-label="新资料库名称"><button type="button" data-action="createlib">创建</button></div>
         <label class="paper-label">标签 <small>按回车或逗号添加</small></label>
-        <div class="tag-editor"><div data-tags></div><input name="tag" maxlength="200" placeholder="＋ 添加标签" aria-label="添加标签"></div>
+        <div class="tag-editor"><div data-tags></div><input name="tag" maxlength="200" placeholder="＋ 标签/子标签" aria-label="添加标签" list="${suggestionId}"></div><datalist id="${suggestionId}"></datalist></details>
         <div class="paper-message" role="status" aria-live="polite">${draft ? '已恢复上次未保存的草稿' : '好想法，值得被好好保存。'}</div>
-        <footer class="paper-actions"><button type="button" class="paper-suggest" data-action="suggest">✧ 归档建议</button><button type="submit" class="paper-save">${record ? '保存修改' : '保存到资料库'} <span>↗</span></button></footer>
+        <footer class="paper-actions"><button type="button" class="paper-suggest" data-action="suggest">✧ 归档建议</button><button type="submit" class="paper-save">${record ? '保存修改' : '保存记录'} <span>↗</span></button></footer>
         <div class="paper-shortcut">Ctrl / ⌘ + Enter 保存</div>
       </form></section>`;
     const form = host.querySelector('form'), field = name => form.elements.namedItem(name);
@@ -33,10 +35,11 @@
     for (const name of ['title', 'content', 'type']) field(name).value = initial[name] || (name === 'type' ? 'Prompt' : '');
     async function refreshLibraries() {
       const selected = field('libraryId').value || initial.libraryId;
-      const libs = (await S.all()).filter(x => x.kind === 'library' && !x.deleted);
+      const allRows = await S.all(), libs = allRows.filter(x => x.kind === 'library' && !x.deleted);
       if (disposed) return;
-      field('libraryId').innerHTML = libs.map(l => `<option value="${L.esc(l.id)}">${L.esc(l.payload.name)}</option>`).join('');
-      if (libs.some(l => l.id === selected)) field('libraryId').value = selected;
+      field('libraryId').innerHTML = '<option value="lib-inbox">未分类 · 稍后整理</option>' + libs.map(l => `<option value="${L.esc(l.id)}">${L.esc(l.payload.name)}</option>`).join('');
+      if (selected === 'lib-inbox' || libs.some(l => l.id === selected)) field('libraryId').value = selected;
+      host.querySelector('datalist').innerHTML = [...new Set(allRows.filter(r=>r.kind==='note'&&!r.deleted).flatMap(r=>r.payload.tags))].sort().map(t=>`<option value="#${L.esc(t)}"></option>`).join('');
     }
     await refreshLibraries();
     function renderTags() {
@@ -58,6 +61,7 @@
       const action = e.target.closest('[data-action]')?.dataset.action;
       try {
         if (action === 'suggest') {
+          host.querySelector('.capture-details').open = true;
           const id = L.suggest(field('title').value + ' ' + field('content').value);
           if ([...field('libraryId').options].some(o => o.value === id)) field('libraryId').value = id;
           message('建议归入 ' + field('libraryId').selectedOptions[0].text + '，可手动调整'); persist();
@@ -98,7 +102,7 @@
     });
     renderTags(); host.querySelector('[data-count]').textContent = field('content').value.length + ' 字';
     const changed = () => void refreshLibraries(); window.addEventListener('whalex-change', changed);
-    return { focus: () => field('content').focus(), setType: type => { if (L.TYPES.includes(type)) { field('type').value = type; persist(); field('content').focus(); } }, suggest: () => host.querySelector('[data-action="suggest"]').click(), dispose: () => { disposed = true; host.removeEventListener('click', clickHandler); window.removeEventListener('whalex-change', changed); }, persist };
+    return { focus: () => field('content').focus(), restoreDraft: payload => { if(field('content').value.trim())return false;for(const name of ['title','content','type','libraryId'])field(name).value=payload[name];chosenTags=L.tags(payload.tags);renderTags();persist();field('content').focus();return true; }, setType: type => { if (L.TYPES.includes(type)) { field('type').value = type; persist(); field('content').focus(); } }, suggest: () => host.querySelector('[data-action="suggest"]').click(), dispose: () => { disposed = true; host.removeEventListener('click', clickHandler); window.removeEventListener('whalex-change', changed); }, persist };
   }
   window.WhaleXComposer = { mount };
 })();
